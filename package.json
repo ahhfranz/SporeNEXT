@@ -1,0 +1,40 @@
+{
+  "name": "spore-next-launcher",
+  "version": "1.1.0",
+  "main": "src/main/main.js",
+  "type": "module",
+  "scripts": {
+    "start": "electron src/main/main.js",
+    "dist": "electron-builder"
+  },
+  "devDependencies": {
+    "electron": "^37.2.3",
+    "electron-builder": "^26.0.12"
+  },
+  "dependencies": {
+    "adm-zip": "^0.5.16",
+    "node-unrar-js": "^2.0.2",
+    "unrar": "^0.2.0"
+  },
+  "build": {
+    "appId": "com.spore.next.launcher",
+    "productName": "Spore NEXT Launcher",
+    "files": [
+      "public/**/*",
+      "src/**/*",
+      "Mods/**/*",
+      "package.json"
+    ],
+    "directories": {
+      "buildResources": "public/assets"
+    },
+    "win": {
+      "target": "nsis",
+      "icon": "public/assets/spore.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    }
+  }
+}

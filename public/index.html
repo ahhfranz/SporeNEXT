@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-i18n="title">Spore NEXT</title>
+    <link rel="stylesheet" href="styles/app.css">
+</head>
+
+<body>
+
+    <div class="launcher-window">
+        <div class="launcher-header">
+            <img src="assets/spore-logo.png" alt="Spore Logo" class="logo" draggable="false">
+            <span class="launcher-title" data-i18n="launcherTitle">Spore NEXT Launcher <b>v0.1</b></span>
+            <div class="window-controls">
+                <button class="window-minimize">—</button>
+                <button class="window-close">✖</button>
+            </div>
+        </div>
+
+        <div class="launcher-content">
+            <h2 data-i18n="welcomeTitle">¡Bienvenido!</h2>
+            <p data-i18n="updatedText">Spore NEXT<b> está actualizado.</b></p>
+            <div class="launcher-buttons">
+                <button class="play-btn-spore"><img src="assets/spore.png" alt="Spore" draggable="false"
+                        data-i18n="sporeIcon"> <span data-i18n="startSpore">Iniciar</span></button>
+                <button class="play-btn-ga"><img src="assets/sporega.png" alt="SporeGA" draggable="false"
+                        data-i18n="gaIcon"> <span data-i18n="startGA">Iniciar</span></button>
+            </div>
+        </div>
+        <div class="launcher-footer">
+            <div class="footer-item">
+                <img src="assets/install.png" alt="Install Mods" draggable="false">
+                <span data-i18n="install">Instalar</span>
+            </div>
+            <div class="footer-item" id="discord-btn">
+                <img src="assets/discord.png" alt="Discord" draggable="false">
+                <span data-i18n="discord">Discord</span>
+            </div>
+            <div class="footer-item">
+                <img src="assets/settings.png" alt="Settings" draggable="false">
+                <span data-i18n="settings">Configuracion</span>
+            </div>
+        </div>
+
+        <div id="settings-modal" class="mods-modal hidden">
+            <div class="mods-modal-content settings-modal-content">
+                <a id="close-settings-modal" class="close-modal-link" href="#" title="Cerrar">✖</a>
+                <h3 class="settings-title" data-i18n="settingsTitle">SPORE NEXT / CONFIGURACIÓN</h3>
+                <div class="settings-paths">
+                    <div class="settings-path-block">
+                        <label for="spore-path" class="settings-label">
+                            <img src="assets/spore.png" alt="Spore" class="settings-label-icon">
+                            <span data-i18n="sporePathLabel">Ruta de Spore</span>
+                        </label>
+                        <div class="settings-path-row">
+                            <input id="spore-path" type="text" class="settings-path-input">
+                            <button id="browse-spore-path" class="settings-browse-btn" data-i18n="browse">...</button>
+                        </div>
+                    </div>
+                    <div class="settings-path-block">
+                        <label for="ga-path" class="settings-label">
+                            <img src="assets/sporega.png" alt="SporeGA" draggable="false" class="settings-label-icon">
+                            <span data-i18n="gaPathLabel">Ruta de Spore: Galactic Adventures</span>
+                        </label>
+                        <div class="settings-path-row">
+                            <input id="ga-path" type="text" draggable="false" class="settings-path-input">
+                            <button id="browse-ga-path" class="settings-browse-btn" data-i18n="browse">...</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="settings-lang-row settings-lang-row-flex">
+                    <div class="settings-lang-group">
+                        <label for="lang-select" class="settings-label">
+                            <img src="assets/language.png" alt="Idioma" class="settings-label-icon">
+                            <span data-i18n="language">Idioma</span>
+                        </label>
+                        <select id="lang-select" class="settings-lang-select">
+                            <option value="es" data-i18n="spanish">Español</option>
+                            <option value="en" data-i18n="english">English</option>
+                        </select>
+                    </div>
+                    <button id="uninstall-mods-btn" class="settings-uninstall-btn" data-i18n="uninstallAllMods">Remove
+                        all mods</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="mods-modal" class="mods-modal hidden">
+            <div class="mods-modal-content">
+                <a id="close-mods-modal" class="close-modal-link" draggable="false" href="#" title="Cerrar">✖</a>
+                <h3 data-i18n="modsTitle">SPORE NEXT / MODS</h3>
+                <div class="mod-details-layout">
+                    <div class="mod-image-section">
+                        <img src="assets/spore-logo.png" alt="HD Textures" class="mod-detail-img">
+                    </div>
+                    <div class="mod-info-section">
+                        <h4 class="mod-title" data-i18n="modTitle">Spore NEXT</h4>
+                        <p class="mod-desc" data-i18n="modDesc">
+                            Paquete de mods que mejora las texturas a alta resolución y la experiencia de juego
+                            general.<br>
+                            <b>Peso:</b> 922 MB<br>
+                            <b>Contenido:</b>
+                        </p>
+                        <ul class="mod-features">
+                            <li data-i18n="feature1">Elimina el límite de fps nativo del juego para que puedas jugar a
+                                60fps estables.</li>
+                            <li data-i18n="feature2">Mejoras a la iluminación, sombras y reflejos.</li>
+                            <li data-i18n="feature3">Mejora de las texturas de objetos a distancia.</li>
+                            <li data-i18n="feature4">Mejora de las Mallas, fondos de imperios, detalles y partes de los
+                                creadores a alta resolución.</li>
+                        </ul>
+                        <div class="mod-buttons">
+                            <button class="install-mod-btn" data-target="spore">
+                                <img src="assets/spore.png" alt="Spore" draggable="false">
+                                <span data-i18n="installSpore">Instalar en Spore</span>
+                            </button>
+                            <button class="install-mod-btn ga-btn" data-target="ga">
+                                <img src="assets/sporega.png" alt="Galactic Adventures" draggable="false">
+                                <span data-i18n="installGA">Instalar en Spore: Galactic Adventures</span>
+                            </button>
+                            <div id="install-progress" class="install-progress hidden">
+                                <div class="progress-bar">
+                                    <div class="progress-bar-fill"></div>
+                                </div>
+                                <span class="progress-text" data-i18n="installing">Instalando...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <script src="renderer.js"></script>
+    </div>
+</body>
+
+</html>
