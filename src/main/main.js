@@ -147,10 +147,10 @@ app.on('activate', () => {
     }
 });
 
-ipcMain.handle('set-spore-path', (event, pathValue) => {
+ipcMain.handle('set-spore-path', (pathValue) => {
     userSporePath = pathValue;
 });
-ipcMain.handle('set-ga-path', (event, pathValue) => {
+ipcMain.handle('set-ga-path', (pathValue) => {
     userGAPath = pathValue;
 });
 
@@ -281,7 +281,7 @@ ipcMain.handle('browse-folder', async () => {
     return result.filePaths[0];
 });
 
-ipcMain.handle('check-spore-path', (event, folderPath, type) => {
+ipcMain.handle('check-spore-path', (_event, folderPath, type) => {
     if (!folderPath) return false;
     const normalizedPath = path.normalize(folderPath).replace(/[\\\/]+$/, '');
     if (type === 'spore') {

@@ -12,13 +12,12 @@
     "electron-builder": "^26.0.12"
   },
   "dependencies": {
-    "adm-zip": "^0.5.16",
-    "node-unrar-js": "^2.0.2",
-    "unrar": "^0.2.0"
+    "adm-zip": "^0.5.16"
   },
   "build": {
     "appId": "com.spore.next.launcher",
     "productName": "Spore NEXT Launcher",
+    "asar": true,
     "files": [
       "public/**/*",
       "src/**/*",
@@ -35,6 +34,9 @@
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true
-    }
+    },
+    "electronLanguages": [
+      "en-US"
+    ]
   }
 }
