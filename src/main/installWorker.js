@@ -2,7 +2,7 @@ import path from 'path';
 import fs from 'fs';
 import AdmZip from 'adm-zip';
 
-const [, , modSource, destPath, configDir] = process.argv;
+const [modSource, destPath, configDir] = process.argv;
 
 try {
     const zip = new AdmZip(modSource);
