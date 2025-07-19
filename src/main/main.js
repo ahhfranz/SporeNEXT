@@ -214,7 +214,7 @@ ipcMain.handle('install-mod', async (event, modFile, target) => {
         return false;
     }
 
-    return await new Promise((resolve) => {
+    const installResult = await new Promise((resolve) => {
         const child = fork(workerPath, [modSource, destPath, configDir], {
             stdio: ['pipe', 'pipe', 'pipe', 'ipc']
         });
@@ -237,6 +237,16 @@ ipcMain.handle('install-mod', async (event, modFile, target) => {
 
         child.on('exit', () => { });
     });
+
+    if (installResult && fs.existsSync(modSource)) {
+        try {
+            fs.unlinkSync(modSource);
+        } catch (err) {
+            console.warn('No se pudo borrar mod.zip:', err);
+        }
+    }
+
+    return installResult;
 });
 
 ipcMain.on('uninstall-mod', (event, modName) => {
