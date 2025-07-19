@@ -191,7 +191,11 @@ ipcMain.handle('install-mod', async (event, modFile, target) => {
         fs.mkdirSync(configDir, { recursive: true });
     }
 
-    const modSource = path.join(__dirname, '../../Mods', modFile);
+    const modsDir = path.join(app.getPath('userData'), 'mods');
+    if (!fs.existsSync(modsDir)) {
+        fs.mkdirSync(modsDir, { recursive: true });
+    }
+    const modSource = path.join(modsDir, modFile);
     const workerPath = path.join(__dirname, 'installWorker.js');
 
     if (!fs.existsSync(modSource)) {
