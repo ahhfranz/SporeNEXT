@@ -64,3 +64,15 @@ This application was developed **non-commercially**, as a personal project to:
 
 Contributions are welcome! Feel free to fork the repository, submit issues, or suggest improvements via pull requests.
 
+---
+
+## 🎉 Special Thanks
+
+* **Spore Modding Community** for all the tools, resources, and continued support.
+* **EMD**
+* **Mrs. White**
+* **Insanegrox**
+* **paranoid_modder**
+
+Thank you for helping make Spore better!
+
