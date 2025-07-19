@@ -229,7 +229,7 @@ window.addEventListener('keydown', (e) => {
 });
 
 let currentTranslations = {};
-let currentLang = 'es';
+let currentLang = 'en';
 
 async function loadLocale(lang) {
     const localePath = lang === 'es' ? 'locales/es.json' : 'locales/en.json';
@@ -265,9 +265,10 @@ if (langSelect) {
         await validateSporePath();
         await validateGAPath();
     });
-    const savedLang = localStorage.getItem('sporeLang') || langSelect.value;
+
+    const savedLang = localStorage.getItem('sporeLang') || 'en';
     langSelect.value = savedLang;
     loadLocale(savedLang);
 } else {
-    loadLocale('es');
+    loadLocale('en');
 }
