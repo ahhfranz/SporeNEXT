@@ -1,6 +1,6 @@
 {
-  "name": "spore-next-launcher",
-  "version": "1.0.0",
+  "name": "spore-next",
+  "version": "0.2.0",
   "main": "src/main/main.js",
   "type": "module",
   "scripts": {
@@ -12,17 +12,26 @@
     "electron-builder": "^26.0.12"
   },
   "dependencies": {
-    "adm-zip": "^0.5.16"
+    "adm-zip": "^0.5.16",
+    "electron-updater": "^6.6.2",
+    "node-fetch": "^3.3.2"
   },
   "build": {
-    "appId": "com.spore.next.launcher",
-    "productName": "Spore NEXT Launcher",
+    "appId": "com.spore.next",
+    "productName": "Spore NEXT",
     "asar": true,
     "files": [
       "public/**/*",
       "src/**/*",
       "Mods/**/*",
       "package.json"
+    ],
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "ahhfranz",
+        "repo": "SporeNEXT"
+      }
     ],
     "directories": {
       "buildResources": "public/assets"

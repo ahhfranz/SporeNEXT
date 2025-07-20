@@ -28,10 +28,10 @@ This launcher provides an easy, automated way to enhance your Spore experience w
 ### Installation
 
 1. Download the latest version of the launcher from the [Releases](https://github.com/ahhfranz/SporeNEXT/releases) section.
-2. Install and open the launcher.
-3. The launcher will attempt to detect your game installation paths. If they are not detected, you can set them manually.
-4. Click the **Install** button and follow the on-screen instructions.
-5. Enjoy!
+2. Open the launcher. If paths are not detected automatically, set them manually.
+3. Click the Install button, then choose the game you want to install the mods for (Spore / Spore GA.)
+4. It will start downloading and installing the mod pack, just wait about 2-3 minutes.
+5. Done! Enjoy Spore with enhanced HD visuals.
 
 ### Uninstallation
 
@@ -72,6 +72,7 @@ Contributions are welcome! Feel free to fork the repository, submit issues, or s
 * **EMD**
 * **Mrs. White**
 * **Insanegrox**
+* **Nutyo**
 * **paranoid_modder**
 
 Thank you for helping make Spore better!

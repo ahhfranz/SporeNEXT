@@ -144,6 +144,7 @@ input:focus {
 
 .play-btn-spore:hover {
     background: #023677;
+    box-shadow: 0 4px 16px #023677;
 }
 
 .play-btn-ga {
@@ -162,6 +163,7 @@ input:focus {
 
 .play-btn-ga:hover {
     background: #9e320b;
+    box-shadow: 0 4px 16px #9e320b;
 }
 
 .play-btn-spore,
@@ -182,6 +184,25 @@ input:focus {
     -webkit-user-drag: none;
 }
 
+#update-launcher-btn {
+    display: none;
+    margin-top: 20px;
+    background: #5eb173;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 32px;
+    font-size: 1.1em;
+    cursor: pointer;
+    box-shadow: 0 2px 6px #222;
+    transition: background 0.18s, box-shadow 0.18s;
+}
+
+#update-launcher-btn:hover {
+    background: #327e45;
+    box-shadow: 0 4px 16px #327e45;
+}
+
 .launcher-buttons {
     display: flex;
     gap: 16px;
@@ -193,7 +214,6 @@ input:focus {
     justify-content: space-around;
     align-items: center;
     background: #222;
-    padding: 16px 0;
 }
 
 .footer-item {
@@ -204,16 +224,20 @@ input:focus {
     font-size: 1em;
     transition: color 0.2s;
     cursor: pointer;
+    padding: 16px 24px;
 }
 
 .footer-item img {
     width: 32px;
     height: 32px;
     margin-bottom: 4px;
+    filter: brightness(0) invert(1);
+    transition: filter 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .footer-item:hover img {
     filter: invert(41%) sepia(98%) saturate(7497%) hue-rotate(203deg) brightness(1.1);
+    transform: scale(1.50);
 }
 
 .mods-modal {
@@ -580,4 +604,29 @@ input:focus {
 .settings-uninstall-btn:hover {
     background: #b30000;
     box-shadow: 0 4px 16px #ff4d4f88;
+}
+
+
+
+
+@keyframes bounce {
+    0% {
+        transform: scale(1);
+    }
+
+    40% {
+        transform: scale(1.45);
+    }
+
+    60% {
+        transform: scale(1.25);
+    }
+
+    80% {
+        transform: scale(1.38);
+    }
+
+    100% {
+        transform: scale(1.35);
+    }
 }

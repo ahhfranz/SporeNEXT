@@ -6,7 +6,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
     openModsFolder: () => ipcRenderer.invoke('open-mods-folder'),
     openDiscord: () => ipcRenderer.invoke('open-discord'),
     installMod: (modFile, target) => ipcRenderer.invoke('install-mod', modFile, target),
-    onModInstallProgress: (callback) => ipcRenderer.on('mod-install-progress', (_event, percent) => callback(percent)),
+    onModInstallProgress: (callback) => ipcRenderer.on('mod-install-progress', (event, percent) => callback(percent)),
     detectSporePath: () => ipcRenderer.invoke('detect-spore-path'),
     detectGAPPath: () => ipcRenderer.invoke('detect-ga-path'),
     setSporePath: (path) => ipcRenderer.invoke('set-spore-path', path),
@@ -16,5 +16,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
     removeModInstallProgressListeners: () => ipcRenderer.removeAllListeners('mod-install-progress'),
     launchSpore: () => ipcRenderer.invoke('launch-spore'),
     launchGA: () => ipcRenderer.invoke('launch-ga'),
-    uninstallAllMods: () => ipcRenderer.invoke('uninstall-all-mods')
+    uninstallAllMods: () => ipcRenderer.invoke('uninstall-all-mods'),
+    updateLauncher: () => ipcRenderer.send('quit-and-install'),
+    onUpdateAvailable: (callback) => ipcRenderer.on('update-available', callback),
+    onUpdateDownloaded: (callback) => ipcRenderer.on('update-downloaded', callback)
 });

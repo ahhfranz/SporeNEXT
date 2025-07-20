@@ -1,51 +1,39 @@
-import { app, BrowserWindow, ipcMain, shell } from 'electron';
+import { app, BrowserWindow, ipcMain, shell, dialog } from 'electron';
 import { fileURLToPath } from 'url';
 import path from 'path';
 import fs from 'fs';
 import { fork } from 'child_process';
-import { dialog } from 'electron';
 import http from 'http';
 import https from 'https';
+import pkg from 'electron-updater';
 
-
+const { autoUpdater } = pkg;
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const MOD_ZIP_URL = 'http://69.62.98.110/mods/mod.zip';
 
-let userSporePath = '';
-let userGAPath = '';
-let mainWindow = null;
+let userSporePath = '', userGAPath = '', mainWindow = null;
 
 function downloadModZip(url, destPath, onProgress) {
     return new Promise((resolve, reject) => {
         const client = url.startsWith('https') ? https : http;
         client.get(url, (response) => {
-            if (response.statusCode !== 200) {
-                reject(new Error('Failed to download mod.zip'));
-                return;
-            }
+            if (response.statusCode !== 200) return reject(new Error('Failed to download mod.zip'));
             const total = parseInt(response.headers['content-length'], 10);
             let downloaded = 0;
             const file = fs.createWriteStream(destPath);
-            response.on('data', (chunk) => {
+            response.on('data', chunk => {
                 downloaded += chunk.length;
-                if (total && onProgress) {
-                    const percent = Math.round((downloaded / total) * 50);
-                    onProgress(percent);
-                }
+                if (total && onProgress) onProgress(Math.round((downloaded / total) * 50));
             });
             response.pipe(file);
-            file.on('finish', () => {
-                file.close(() => resolve(true));
-            });
-        }).on('error', (err) => {
-            fs.unlink(destPath, () => reject(err));
-        });
+            file.on('finish', () => file.close(() => resolve(true)));
+        }).on('error', err => fs.unlink(destPath, () => reject(err)));
     });
 }
 
 function detectSporeBasePath() {
-    const possibleBases = [
+    const bases = [
         'C:\\Program Files (x86)\\Steam\\steamapps\\common\\spore',
         'C:\\Program Files\\Steam\\steamapps\\common\\spore',
         'D:\\SteamLibrary\\steamapps\\common\\spore',
@@ -53,252 +41,135 @@ function detectSporeBasePath() {
         'C:\\Spore',
         'D:\\Spore'
     ];
-    for (const base of possibleBases) {
-        if (fs.existsSync(base)) {
-            return base;
-        }
-    }
-    return '';
+    return bases.find(base => fs.existsSync(base)) || '';
 }
 
 function detectSporeDataPath() {
     const base = detectSporeBasePath();
-    if (!base) return '';
-    const dataPath = path.join(base, 'Data');
-    return fs.existsSync(dataPath) ? dataPath : '';
+    const dataPath = base ? path.join(base, 'Data') : '';
+    return dataPath && fs.existsSync(dataPath) ? dataPath : '';
 }
 
 function detectGADataPath() {
-    const possibleGADataPaths = [
+    const paths = [
         path.join(detectSporeBasePath(), 'DataEP1'),
         'C:\\Program Files\\EA Games\\Spore\\SPORE Galactic Adventures\\Data',
         'C:\\Program Files (x86)\\EA Games\\Spore\\SPORE Galactic Adventures\\Data',
         'D:\\Spore\\SPORE Galactic Adventures\\Data'
     ];
-    for (const gaPath of possibleGADataPaths) {
-        if (fs.existsSync(gaPath)) {
-            return gaPath;
-        }
-    }
-    return '';
+    return paths.find(p => fs.existsSync(p)) || '';
 }
 
 function detectSporeExe() {
     const base = detectSporeBasePath();
-    if (!base) return '';
-    const exePath = path.join(base, 'SporeBin', 'SporeApp.exe');
-    return fs.existsSync(exePath) ? exePath : '';
+    const exePath = base ? path.join(base, 'SporeBin', 'SporeApp.exe') : '';
+    return exePath && fs.existsSync(exePath) ? exePath : '';
 }
 
 function detectGAExe() {
-    const possibleGAExes = [
+    const exes = [
         path.join(detectSporeBasePath(), 'SporebinEP1', 'SporeApp.exe'),
         'C:\\Program Files\\EA Games\\Spore\\SPORE Galactic Adventures\\SporebinEP1\\SporeApp.exe',
         'C:\\Program Files (x86)\\EA Games\\Spore\\SPORE Galactic Adventures\\SporebinEP1\\SporeApp.exe',
         'D:\\Spore\\SPORE Galactic Adventures\\SporebinEP1\\SporeApp.exe'
     ];
-    for (const exePath of possibleGAExes) {
-        if (fs.existsSync(exePath)) {
-            return exePath;
-        }
-    }
-    return '';
+    return exes.find(exe => fs.existsSync(exe)) || '';
 }
 
 function createWindow() {
     mainWindow = new BrowserWindow({
-        width: 800,
-        height: 600,
-        frame: false,
-        resizable: false,
-        maximizable: false,
+        width: 1200, height: 800, frame: false, resizable: false, maximizable: false,
         icon: path.join(__dirname, '../../public/assets/spore.png'),
         webPreferences: {
             preload: path.join(__dirname, '../../src/main/preload.js'),
-            contextIsolation: true,
-            nodeIntegration: false,
+            contextIsolation: true, nodeIntegration: false
         },
-        backgroundColor: '#222222',
+        backgroundColor: '#222222'
     });
-
     mainWindow.loadFile(path.join(__dirname, '../../public/index.html'));
-
-    mainWindow.on('maximize', (event) => {
-        event.preventDefault();
-        mainWindow.unmaximize();
-    });
-
-    mainWindow.on('closed', () => {
-        mainWindow = null;
-    });
+    mainWindow.on('maximize', e => { e.preventDefault(); mainWindow.unmaximize(); });
+    mainWindow.on('closed', () => { mainWindow = null; });
 }
 
-app.on('ready', createWindow);
-
-app.on('window-all-closed', () => {
-    if (process.platform !== 'darwin') {
-        app.quit();
-    }
+app.on('ready', () => {
+    createWindow();
+    autoUpdater.checkForUpdatesAndNotify();
+    autoUpdater.on('update-downloaded', () => mainWindow?.webContents.send('update-downloaded'));
 });
 
-app.on('activate', () => {
-    if (mainWindow === null) {
-        createWindow();
-    }
-});
+app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(); });
+app.on('activate', () => { if (!mainWindow) createWindow(); });
 
-ipcMain.handle('set-spore-path', (pathValue) => {
-    userSporePath = pathValue;
-});
-ipcMain.handle('set-ga-path', (pathValue) => {
-    userGAPath = pathValue;
-});
+ipcMain.handle('set-spore-path', (_e, v) => { if (typeof v === 'string') userSporePath = path.normalize(v).replace(/[\\\/]+$/, ''); });
+ipcMain.handle('set-ga-path', (_e, v) => { if (typeof v === 'string') userGAPath = path.normalize(v).replace(/[\\\/]+$/, ''); });
 
-ipcMain.handle('close-window', () => {
-    mainWindow?.close();
-});
-
-ipcMain.handle('minimize-window', () => {
-    mainWindow?.minimize();
-});
-
+ipcMain.handle('close-window', () => mainWindow?.close());
+ipcMain.handle('minimize-window', () => mainWindow?.minimize());
 ipcMain.handle('open-mods-folder', () => {
     const modsPath = path.join(app.getPath('userData'), 'mods');
-    if (!fs.existsSync(modsPath)) {
-        fs.mkdirSync(modsPath, { recursive: true });
-    }
+    if (!fs.existsSync(modsPath)) fs.mkdirSync(modsPath, { recursive: true });
     shell.openPath(modsPath);
 });
-
-ipcMain.handle('open-discord', () => {
-    shell.openExternal('https://discord.com/users/640310157796179978');
-});
+ipcMain.handle('open-discord', () => shell.openExternal('https://discord.com/users/640310157796179978'));
 
 ipcMain.handle('install-mod', async (event, modFile, target) => {
-    let destPath;
-    if (target === 'ga') {
-        destPath = userGAPath || detectGADataPath();
-    } else if (target === 'spore') {
-        destPath = userSporePath || detectSporeDataPath();
-    }
-    if (!destPath || !fs.existsSync(destPath)) {
-        console.error('Ruta de destino no encontrada');
-        return false;
-    }
-
+    const destPath = target === 'ga' ? (userGAPath || detectGADataPath()) : (userSporePath || detectSporeDataPath());
+    if (!destPath || !fs.existsSync(destPath)) return false;
     const configDir = path.join(destPath, 'Config');
-    if (!fs.existsSync(configDir)) {
-        fs.mkdirSync(configDir, { recursive: true });
-    }
-
+    if (!fs.existsSync(configDir)) fs.mkdirSync(configDir, { recursive: true });
     const modsDir = path.join(app.getPath('userData'), 'mods');
-    if (!fs.existsSync(modsDir)) {
-        fs.mkdirSync(modsDir, { recursive: true });
-    }
+    if (!fs.existsSync(modsDir)) fs.mkdirSync(modsDir, { recursive: true });
     const modSource = path.join(modsDir, modFile);
+
     const workerPath = path.join(__dirname, 'installWorker.js');
-
     if (!fs.existsSync(modSource)) {
-        try {
-            await downloadModZip(MOD_ZIP_URL, modSource, (percent) => {
-                event.sender.send('mod-install-progress', percent);
-            });
-        } catch (err) {
-            console.error('No se pudo descargar el mod:', err);
-            return false;
-        }
+        try { await downloadModZip(MOD_ZIP_URL, modSource, p => event.sender.send('mod-install-progress', p)); }
+        catch { return false; }
     }
-
-    if (!fs.existsSync(modSource)) {
-        console.error('No se encontró el archivo del mod:', modSource);
-        return false;
-    }
-
-    const installResult = await new Promise((resolve) => {
-        const child = fork(workerPath, [modSource, destPath, configDir], {
-            stdio: ['pipe', 'pipe', 'pipe', 'ipc']
+    if (!fs.existsSync(modSource)) return false;
+    const installResult = await new Promise(resolve => {
+        const child = fork(workerPath, [modSource, destPath, configDir], { stdio: ['pipe', 'pipe', 'pipe', 'ipc'] });
+        child.on('message', msg => {
+            if (msg.progress !== undefined) event.sender.send('mod-install-progress', 50 + Math.round(msg.progress / 2));
+            if (msg.success !== undefined) { resolve(msg.success); child.kill(); }
         });
-
-        child.on('message', (msg) => {
-            if (msg.progress !== undefined) {
-                const percent = 50 + Math.round(msg.progress / 2);
-                event.sender.send('mod-install-progress', percent);
-            }
-            if (msg.success !== undefined) {
-                resolve(msg.success);
-                child.kill();
-            }
-        });
-
-        child.on('error', (err) => {
-            resolve(false);
-            child.kill();
-        });
-
+        child.on('error', () => { resolve(false); child.kill(); });
         child.on('exit', () => { });
     });
-
-    if (installResult && fs.existsSync(modSource)) {
-        try {
-            fs.unlinkSync(modSource);
-        } catch (err) {
-            console.warn('No se pudo borrar mod.zip:', err);
-        }
-    }
-
+    if (installResult && fs.existsSync(modSource)) { try { fs.unlinkSync(modSource); } catch { } }
     return installResult;
 });
 
-ipcMain.on('uninstall-mod', (event, modName) => {
-    const modsDir = path.join(app.getPath('userData'), 'mods');
-    const modFile = path.join(modsDir, modName);
-    fs.unlink(modFile, (err) => {
-        event.reply('uninstall-mod-result', !err);
-    });
-});
-
-ipcMain.on('check-for-updates', (event) => {
-    setTimeout(() => {
-        event.reply('update-check-result', { upToDate: true, version: 'v6.6.5' });
-    }, 1000);
-});
-
-ipcMain.handle('detect-spore-path', () => {
-    return detectSporeDataPath();
-});
-
-ipcMain.handle('detect-ga-path', () => {
-    return detectGADataPath();
-});
-
+ipcMain.handle('detect-spore-path', () => detectSporeDataPath());
+ipcMain.handle('detect-ga-path', () => detectGADataPath());
 ipcMain.handle('browse-folder', async () => {
-    const result = await dialog.showOpenDialog({
-        properties: ['openDirectory']
-    });
-    if (result.canceled || result.filePaths.length === 0) {
-        return '';
-    }
-    return result.filePaths[0];
+    const result = await dialog.showOpenDialog({ properties: ['openDirectory'] });
+    return result.canceled || result.filePaths.length === 0 ? '' : result.filePaths[0];
 });
-
-ipcMain.handle('check-spore-path', (_event, folderPath, type) => {
+ipcMain.handle('check-spore-path', (_e, folderPath, type) => {
     if (!folderPath) return false;
-    const normalizedPath = path.normalize(folderPath).replace(/[\\\/]+$/, '');
-    if (type === 'spore') {
-        return fs.existsSync(normalizedPath) && path.basename(normalizedPath).toLowerCase() === 'data';
-    } else if (type === 'ga') {
-        const isDataEP1 = fs.existsSync(normalizedPath) && path.basename(normalizedPath).toLowerCase() === 'dataep1';
-        const isEAData = fs.existsSync(normalizedPath) &&
-            path.basename(normalizedPath).toLowerCase() === 'data' &&
-            normalizedPath.toLowerCase().includes('spore galactic adventures');
+    const normalized = path.normalize(folderPath).replace(/[\\\/]+$/, '');
+    if (type === 'spore')
+        return fs.existsSync(normalized) && path.basename(normalized).toLowerCase() === 'data';
+    if (type === 'ga') {
+        const isDataEP1 = fs.existsSync(normalized) && path.basename(normalized).toLowerCase() === 'dataep1';
+        const isEAData = fs.existsSync(normalized) && path.basename(normalized).toLowerCase() === 'data' && normalized.toLowerCase().includes('spore galactic adventures');
         return isDataEP1 || isEAData;
     }
     return false;
 });
 
 ipcMain.handle('launch-spore', () => {
+    const steamPaths = [
+        'C:\\Program Files (x86)\\Steam\\steamapps\\common\\spore',
+        'C:\\Program Files\\Steam\\steamapps\\common\\spore',
+        'D:\\SteamLibrary\\steamapps\\common\\spore'
+    ];
     const exePath = detectSporeExe();
-    if (exePath) {
+    if (steamPaths.some(p => fs.existsSync(p))) {
+        shell.openExternal('steam://run/17390');
+        return true;
+    } else if (exePath && fs.existsSync(exePath)) {
         shell.openPath(exePath);
         return true;
     }
@@ -306,8 +177,16 @@ ipcMain.handle('launch-spore', () => {
 });
 
 ipcMain.handle('launch-ga', () => {
+    const steamPaths = [
+        'C:\\Program Files (x86)\\Steam\\steamapps\\common\\spore',
+        'C:\\Program Files\\Steam\\steamapps\\common\\spore',
+        'D:\\SteamLibrary\\steamapps\\common\\spore'
+    ];
     const exePath = detectGAExe();
-    if (exePath) {
+    if (steamPaths.some(p => fs.existsSync(p))) {
+        shell.openExternal('steam://run/24720');
+        return true;
+    } else if (exePath && fs.existsSync(exePath)) {
         shell.openPath(exePath);
         return true;
     }
@@ -317,58 +196,29 @@ ipcMain.handle('launch-ga', () => {
 ipcMain.handle('uninstall-all-mods', async () => {
     try {
         const modFiles = [
-            'HD_Decals.package',
-            'HD_Editor-background.package',
-            'HD_Empire-backgrounds.package',
-            'HD_Galaxy.package',
-            'HD_LOD-High.package',
-            'HD_Meshes.package',
-            'HD_Meshes2.package',
-            'HD_Particles.package',
-            'HD_Parts.package',
-            'HD_Planet-textures.package'
+            'HD_Decals.package', 'HD_Editor-background.package', 'HD_Empire-backgrounds.package', 'HD_Galaxy.package',
+            'HD_LOD-High.package', 'HD_Meshes.package', 'HD_Meshes2.package', 'HD_Particles.package', 'HD_Parts.package',
+            'HD_Planet-textures.package', 'HD_Water.package', 'HD_Ground.package', 'HD_Background.package',
+            'HD_Textures1.package', 'HD_Textures2.package', 'HD_Textures3.package'
         ];
-        const configFiles = [
-            'ConfigManager.txt',
-            'Properties.txt'
-        ];
+        const configFiles = ['ConfigManager.txt', 'Properties.txt'];
         const folders = [
-            detectSporeDataPath(),
-            detectGADataPath(),
-            'C:\\Program Files\\EA Games\\Spore\\Data',
-            'C:\\Program Files (x86)\\EA Games\\Spore\\Data',
-            'D:\\Spore\\Data',
-            'C:\\Program Files\\EA Games\\Spore\\SPORE Galactic Adventures\\Data',
-            'C:\\Program Files (x86)\\EA Games\\Spore\\SPORE Galactic Adventures\\Data',
-            'D:\\Spore\\SPORE Galactic Adventures\\Data'
-        ].filter((folder, idx, arr) => folder && fs.existsSync(folder) && arr.indexOf(folder) === idx);
-
+            detectSporeDataPath(), detectGADataPath(),
+            'C:\\Program Files\\EA Games\\Spore\\Data', 'C:\\Program Files (x86)\\EA Games\\Spore\\Data', 'D:\\Spore\\Data',
+            'C:\\Program Files\\EA Games\\Spore\\SPORE Galactic Adventures\\Data', 'C:\\Program Files (x86)\\EA Games\\Spore\\SPORE Galactic Adventures\\Data', 'D:\\Spore\\SPORE Galactic Adventures\\Data'
+        ].filter((f, i, arr) => f && fs.existsSync(f) && arr.indexOf(f) === i);
         let success = true;
         for (const folder of folders) {
             for (const file of modFiles) {
                 const filePath = path.join(folder, file);
-                if (fs.existsSync(filePath)) {
-                    try {
-                        fs.unlinkSync(filePath);
-                    } catch {
-                        success = false;
-                    }
-                }
+                if (fs.existsSync(filePath)) try { fs.unlinkSync(filePath); } catch { success = false; }
             }
             const configDir = path.join(folder, 'Config');
             for (const file of configFiles) {
                 const configPath = path.join(configDir, file);
-                if (fs.existsSync(configPath)) {
-                    try {
-                        fs.unlinkSync(configPath);
-                    } catch {
-                        success = false;
-                    }
-                }
+                if (fs.existsSync(configPath)) try { fs.unlinkSync(configPath); } catch { success = false; }
             }
         }
         return success;
-    } catch {
-        return false;
-    }
+    } catch { return false; }
 });
