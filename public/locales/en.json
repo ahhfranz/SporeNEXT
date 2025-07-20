@@ -1,7 +1,7 @@
 {
     "title": "Spore NEXT",
     "launcherTitle": "Spore NEXT Launcher",
-    "welcomeTitle": "Spore NEXT Launcher",
+    "welcomeTitle": "SPORE NEXT",
     "updatedText": "",
     "startSpore": "Launch",
     "startGA": "Launch",
@@ -37,7 +37,7 @@
     "sporeLaunchError": "Failed to launch Spore. Please verify the path in settings.",
     "gaLaunchError": "Failed to launch Galactic Adventures. Please verify the path in settings.",
     "uninstallAllMods": "Uninstall mods",
-    "uninstallAllConfirm": "Are you sure you want to uninstall the mods?",
+    "uninstallAllConfirm": "Are you sure you want to uninstall the Spore NEXT Mod Pack?",
     "uninstallAllSuccess": "All mods have been successfully uninstalled.",
     "uninstallAllError": "An error occurred while uninstalling the mods.",
     "downloadingLong": "Downloading mods... Please do not close the application during download."

@@ -193,6 +193,12 @@ ipcMain.handle('launch-ga', () => {
     return false;
 });
 
+ipcMain.handle('get-app-version', () => {
+    const pkgPath = path.join(__dirname, '../../package.json');
+    const pkgJson = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
+    return pkgJson.version;
+});
+
 ipcMain.handle('uninstall-all-mods', async () => {
     try {
         const modFiles = [

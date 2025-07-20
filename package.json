@@ -1,6 +1,6 @@
 {
   "name": "spore-next",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "main": "src/main/main.js",
   "type": "module",
   "scripts": {
@@ -38,7 +38,7 @@
     },
     "win": {
       "target": "nsis",
-      "icon": "public/assets/spore.png"
+      "icon": "public/assets/spore-logo.png"
     },
     "nsis": {
       "oneClick": false,

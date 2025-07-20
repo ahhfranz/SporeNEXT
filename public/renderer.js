@@ -5,6 +5,8 @@ sporePathInput.parentElement.appendChild(sporeErrorMsg);
 const gaErrorMsg = Object.assign(document.createElement('div'), { style: 'color:red;font-size:0.95em;margin-top:4px;display:none' });
 gaPathInput.parentElement.appendChild(gaErrorMsg);
 
+
+
 window.addEventListener('DOMContentLoaded', async () => {
     document.querySelector('.window-close')?.addEventListener('click', () => window.electronAPI.closeWindow());
     document.querySelector('.window-minimize')?.addEventListener('click', () => window.electronAPI.minimizeWindow());
@@ -103,6 +105,12 @@ async function loadLocale(lang) {
         }
     });
     document.title = translations['title'] || document.title;
+
+    const launcherTitleEl = document.querySelector('.launcher-title');
+    if (launcherTitleEl && window.electronAPI.getAppVersion) {
+        const version = await window.electronAPI.getAppVersion();
+        launcherTitleEl.innerHTML += ` <span style="color:#aaa;font-size:0.85em;">v${version}</span>`;
+    }
 }
 
 const langSelect = document.getElementById('lang-select');

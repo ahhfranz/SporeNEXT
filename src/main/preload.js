@@ -19,5 +19,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
     uninstallAllMods: () => ipcRenderer.invoke('uninstall-all-mods'),
     updateLauncher: () => ipcRenderer.send('quit-and-install'),
     onUpdateAvailable: (callback) => ipcRenderer.on('update-available', callback),
-    onUpdateDownloaded: (callback) => ipcRenderer.on('update-downloaded', callback)
+    onUpdateDownloaded: (callback) => ipcRenderer.on('update-downloaded', callback),
+    getAppVersion: () => ipcRenderer.invoke('get-app-version')
 });

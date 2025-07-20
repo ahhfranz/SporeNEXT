@@ -11,10 +11,20 @@ input:focus {
     border: none !important;
 }
 
+.background-video {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    object-fit: cover;
+    z-index: 0;
+    pointer-events: none;
+}
+
 .launcher-window {
     width: 100vw;
     height: 100vh;
-    background-image: url('../assets/wallpaper.png');
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
@@ -34,8 +44,8 @@ input:focus {
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(0, 0, 0, 0.9);
-    z-index: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1;
     border-radius: 8px;
 }
 
@@ -52,9 +62,9 @@ input:focus {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    background: #222;
+    background: #13151a;
     align-items: center;
-    padding: 12px 24px;
+    padding: 5px 24px;
 }
 
 .logo {
@@ -77,7 +87,7 @@ input:focus {
 
 .window-close,
 .window-minimize {
-    background: #fff;
+    background: #363d4b;
     border: none;
     border-radius: 8px;
     font-size: 25px;
@@ -213,7 +223,6 @@ input:focus {
     display: flex;
     justify-content: space-around;
     align-items: center;
-    background: #222;
 }
 
 .footer-item {
@@ -228,9 +237,9 @@ input:focus {
 }
 
 .footer-item img {
-    width: 32px;
-    height: 32px;
-    margin-bottom: 4px;
+    width: 45px;
+    height: 45px;
+    margin-bottom: 10px;
     filter: brightness(0) invert(1);
     transition: filter 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -258,12 +267,12 @@ input:focus {
 }
 
 .mods-modal-content {
-    background: #23272f;
+    background: #13151a;
     padding: 28px 28px 22px 28px;
     border-radius: 18px;
     box-shadow: 0 8px 32px #000a;
-    min-width: 420px;
-    max-width: 640px;
+    min-width: 600px;
+    max-width: 800px;
     width: 100%;
     margin: 40px auto;
     display: flex;
@@ -300,7 +309,6 @@ input:focus {
     height: 120px;
     object-fit: contain;
     border-radius: 12px;
-    box-shadow: 0 2px 12px #2228;
     -webkit-user-drag: none;
     pointer-events: auto;
     margin-top: 100px;
