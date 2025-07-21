@@ -34,7 +34,7 @@
     "installing": "Instalando...",
     "sporePathError": "Selecciona la carpeta \"Data\". Ejemplo: ...\\spore\\Data",
     "gaPathError": "Selecciona la carpeta \"DataEP1\". Ejemplo: ...\\spore\\DataEP1",
-    "installingLong": "Instalando... Por favor, no cierres la aplicación durante el proceso.",
+    "installingLong": "Instalando... Por favor, no cierres el launcher durante el proceso.",
     "installComplete": "¡Instalación completada!",
     "installError": "Error al instalar el mod. Puede que la ruta de Spore o Galactic Adventures sea incorrecta.",
     "sporeLaunchError": "No se pudo iniciar Spore. Verifica la ruta en la configuración.",
@@ -43,5 +43,12 @@
     "uninstallAllConfirm": "¿Seguro que quieres desinstalar todos los mods?",
     "uninstallAllSuccess": "Todos los mods han sido desinstalados.",
     "uninstallAllError": "Error al desinstalar los mods.",
-    "downloadingLong": "Descargando mods... Por favor, no cierres la aplicación durante la descarga."
+    "downloadingLong": "Descargando mods... Por favor, no cierres el launcher durante la descarga.",
+    "modAlreadyInstalledConfirm": "El mod pack ya se encuentra instalado para este juego y en esta ubicación. ¿Quieres volver a instalarlo?",
+    "modAlreadyInstalledTitle": "SPORE NEXT - Mod ya instalado",
+    "reinstall": "Reinstalar",
+    "closeWhileInstalling": "Hay una instalación en curso. Si cierras el launcher ahora, la instalación puede quedar incompleta o dañada. \n\n¿Seguro que quieres cerrar?",
+    "cancel": "Cancelar",
+    "closeAnyway": "Cerrar de todos modos",
+    "installInProgressTitle": "SPORE NEXT - Instalación en curso"
 }

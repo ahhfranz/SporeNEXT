@@ -20,5 +20,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
     updateLauncher: () => ipcRenderer.send('quit-and-install'),
     onUpdateAvailable: (callback) => ipcRenderer.on('update-available', callback),
     onUpdateDownloaded: (callback) => ipcRenderer.on('update-downloaded', callback),
-    getAppVersion: () => ipcRenderer.invoke('get-app-version')
+    getAppVersion: () => ipcRenderer.invoke('get-app-version'),
+    isModInstalled: (target) => ipcRenderer.invoke('is-mod-installed', target),
+    setInstalling: (installing) => ipcRenderer.invoke('set-installing', installing),
+    setLanguage: (lang) => ipcRenderer.invoke('set-language', lang),
+    showConfirm: (options) => ipcRenderer.invoke('show-confirm', options),
 });

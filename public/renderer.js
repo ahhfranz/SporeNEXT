@@ -103,6 +103,21 @@ window.addEventListener('DOMContentLoaded', async () => {
             await window.electronAPI.setSporePath(sporePathInput.value.trim());
             await window.electronAPI.setGAPath(gaPathInput.value.trim());
             const target = btn.getAttribute('data-target');
+
+            const alreadyInstalled = await window.electronAPI.isModInstalled(target);
+            if (alreadyInstalled) {
+                const confirmMsg = currentTranslations.modAlreadyInstalledConfirm;
+                const confirmed = await window.electronAPI.showConfirm({
+                    title: currentTranslations.launcherTitle,
+                    message: confirmMsg,
+                    okText: currentTranslations.reinstall,
+                    cancelText: currentTranslations.cancel
+                });
+                if (!confirmed) return;
+            }
+
+            await window.electronAPI.setInstalling(true);
+
             const progress = btn.parentElement.querySelector('#install-progress');
             const progressBarFill = progress.querySelector('.progress-bar-fill');
             const progressText = progress.querySelector('.progress-text');
@@ -120,11 +135,12 @@ window.addEventListener('DOMContentLoaded', async () => {
             const result = await window.electronAPI.installMod('mod.zip', target);
             progressBarFill.style.width = '100%';
             progressText.textContent = result ? currentTranslations.installComplete : currentTranslations.installError;
-            setTimeout(() => {
+            setTimeout(async () => {
                 progress.classList.add('hidden');
                 document.querySelectorAll('.install-mod-btn').forEach(b => b.disabled = false);
                 progressBarFill.style.width = '0%';
                 progressText.textContent = currentTranslations.installingLong;
+                await window.electronAPI.setInstalling(false);
             }, 1200);
         });
     });
@@ -183,6 +199,7 @@ if (langSelect) {
     langSelect.addEventListener('change', async () => {
         const lang = langSelect.value;
         localStorage.setItem('sporeLang', lang);
+        await window.electronAPI.setLanguage(lang);
         await loadLocale(lang);
         await validateSporePath();
         await validateGAPath();

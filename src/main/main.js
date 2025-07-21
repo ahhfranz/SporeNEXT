@@ -3,8 +3,6 @@ import { fileURLToPath } from 'url';
 import path from 'path';
 import fs from 'fs';
 import { fork } from 'child_process';
-import http from 'http';
-import https from 'https';
 import pkg from 'electron-updater';
 
 const { autoUpdater } = pkg;
@@ -13,11 +11,28 @@ const __dirname = path.dirname(__filename);
 const MOD_ZIP_URL = 'http://69.62.98.110/mods/mod.zip';
 
 let userSporePath = '', userGAPath = '', mainWindow = null;
+let isInstalling = false;
+
+let currentLang = 'en';
+let translations = {};
+
+function loadTranslations(lang) {
+    const localePath = path.join(__dirname, '../../public/locales', lang + '.json');
+    try {
+        translations = JSON.parse(fs.readFileSync(localePath, 'utf8'));
+    } catch {
+        translations = {};
+    }
+}
+ipcMain.handle('set-language', (_e, lang) => {
+    currentLang = lang;
+    loadTranslations(lang);
+});
+loadTranslations(currentLang);
 
 function downloadModZip(url, destPath, onProgress) {
     return new Promise((resolve, reject) => {
-        const client = url.startsWith('https') ? https : http;
-        client.get(url, (response) => {
+        http.get(url, (response) => {
             if (response.statusCode !== 200) return reject(new Error('Failed to download mod.zip'));
             const total = parseInt(response.headers['content-length'], 10);
             let downloaded = 0;
@@ -89,6 +104,23 @@ function createWindow() {
     mainWindow.loadFile(path.join(__dirname, '../../public/index.html'));
     mainWindow.on('maximize', e => { e.preventDefault(); mainWindow.unmaximize(); });
     mainWindow.on('closed', () => { mainWindow = null; });
+
+    mainWindow.on('close', (e) => {
+        if (isInstalling) {
+            const t = translations;
+            const choice = dialog.showMessageBoxSync(mainWindow, {
+                type: 'warning',
+                buttons: [t.cancel || 'Cancelar', t.closeAnyway || 'Cerrar de todos modos'],
+                defaultId: 0,
+                cancelId: 0,
+                title: t.installInProgressTitle || 'Instalación en curso',
+                message: t.closeWhileInstalling || 'Hay una instalación en curso. Si cierras el launcher ahora, la instalación puede quedar incompleta o dañada.\n\n¿Seguro que quieres cerrar?'
+            });
+            if (choice === 0) {
+                e.preventDefault();
+            }
+        }
+    });
 }
 
 app.on('ready', () => {
@@ -116,6 +148,8 @@ ipcMain.handle('open-mods-folder', () => {
 });
 ipcMain.handle('open-discord', () => shell.openExternal('https://discord.com/users/640310157796179978'));
 
+ipcMain.handle('set-installing', (_e, installing) => { isInstalling = !!installing; });
+
 ipcMain.handle('install-mod', async (event, modFile, target) => {
     const destPath = target === 'ga' ? (userGAPath || detectGADataPath()) : (userSporePath || detectSporeDataPath());
     if (!destPath || !fs.existsSync(destPath)) return false;
@@ -126,15 +160,23 @@ ipcMain.handle('install-mod', async (event, modFile, target) => {
     const modSource = path.join(modsDir, modFile);
 
     const workerPath = path.join(__dirname, 'installWorker.js');
-    if (!fs.existsSync(modSource)) {
-        try { await downloadModZip(MOD_ZIP_URL, modSource, p => event.sender.send('mod-install-progress', p)); }
-        catch { return false; }
+    if (fs.existsSync(modSource)) {
+        try { fs.unlinkSync(modSource); } catch { }
     }
+    try {
+        await downloadModZip(MOD_ZIP_URL, modSource, p => {
+            if (mainWindow && !mainWindow.isDestroyed()) {
+                event.sender.send('mod-install-progress', p);
+            }
+        });
+    } catch { return false; }
     if (!fs.existsSync(modSource)) return false;
     const installResult = await new Promise(resolve => {
         const child = fork(workerPath, [modSource, destPath, configDir], { stdio: ['pipe', 'pipe', 'pipe', 'ipc'] });
         child.on('message', msg => {
-            if (msg.progress !== undefined) event.sender.send('mod-install-progress', 50 + Math.round(msg.progress / 2));
+            if (msg.progress !== undefined && mainWindow && !mainWindow.isDestroyed()) {
+                event.sender.send('mod-install-progress', 50 + Math.round(msg.progress / 2));
+            }
             if (msg.success !== undefined) { resolve(msg.success); child.kill(); }
         });
         child.on('error', () => { resolve(false); child.kill(); });
@@ -205,6 +247,31 @@ ipcMain.handle('get-app-version', () => {
 
 ipcMain.on('quit-and-install', () => {
     autoUpdater.quitAndInstall();
+});
+
+ipcMain.handle('show-confirm', async (_e, options) => {
+    const result = await dialog.showMessageBox(mainWindow, {
+        type: 'question',
+        buttons: [options.okText, options.cancelText],
+        defaultId: 0,
+        cancelId: 1,
+        title: options.title,
+        message: options.message
+    });
+    return result.response === 0;
+});
+
+ipcMain.handle('is-mod-installed', async (_e, target) => {
+    const destPath = target === 'ga' ? (userGAPath || detectGADataPath()) : (userSporePath || detectSporeDataPath());
+    if (!destPath || !fs.existsSync(destPath)) return false;
+    const files = [
+        'HD_Decals.package',
+        'HD_Editor-background.package',
+        'HD_Empire-backgrounds.package',
+        'HD_Galaxy.package',
+        'HD_Water.package'
+    ];
+    return files.every(f => fs.existsSync(path.join(destPath, f)));
 });
 
 ipcMain.handle('uninstall-all-mods', async () => {
