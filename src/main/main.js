@@ -94,6 +94,10 @@ function createWindow() {
 app.on('ready', () => {
     createWindow();
     autoUpdater.checkForUpdatesAndNotify();
+
+    autoUpdater.on('update-available', (info) => {
+        mainWindow?.webContents.send('update-available', info.version);
+    });
     autoUpdater.on('update-downloaded', () => mainWindow?.webContents.send('update-downloaded'));
 });
 
@@ -197,6 +201,10 @@ ipcMain.handle('get-app-version', () => {
     const pkgPath = path.join(__dirname, '../../package.json');
     const pkgJson = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
     return pkgJson.version;
+});
+
+ipcMain.on('quit-and-install', () => {
+    autoUpdater.quitAndInstall();
 });
 
 ipcMain.handle('uninstall-all-mods', async () => {

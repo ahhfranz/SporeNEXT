@@ -5,22 +5,70 @@ sporePathInput.parentElement.appendChild(sporeErrorMsg);
 const gaErrorMsg = Object.assign(document.createElement('div'), { style: 'color:red;font-size:0.95em;margin-top:4px;display:none' });
 gaPathInput.parentElement.appendChild(gaErrorMsg);
 
-
+let currentTranslations = {}, currentLang = 'en', newVersionAvailable = null;
 
 window.addEventListener('DOMContentLoaded', async () => {
     document.querySelector('.window-close')?.addEventListener('click', () => window.electronAPI.closeWindow());
     document.querySelector('.window-minimize')?.addEventListener('click', () => window.electronAPI.minimizeWindow());
     document.getElementById('discord-btn')?.addEventListener('click', () => window.electronAPI.openDiscord());
-    document.getElementById('update-launcher-btn')?.addEventListener('click', () => alert('La actualización se descargará y se instalará al reiniciar el launcher.'));
-    document.querySelector('.footer-item img[alt="Install Mods"]')?.parentElement.addEventListener('click', () => document.getElementById('mods-modal').classList.remove('hidden'));
+    document.getElementById('update-launcher-btn')?.addEventListener('click', function () {
+        if (confirm(currentTranslations.updateConfirm)) {
+            this.disabled = true;
+            this.textContent = currentTranslations.updatingNow;
+            window.electronAPI.updateLauncher();
+        }
+    });
+
+    const modsModal = document.getElementById('mods-modal');
+    const modsModalContent = modsModal.querySelector('.mods-modal-content');
+    document.querySelector('.footer-item img[alt="Install Mods"]')?.parentElement.addEventListener('click', () => {
+        modsModal.classList.remove('hidden', 'animating-out');
+        modsModal.classList.add('animating-in');
+        modsModalContent.classList.remove('animating-out');
+        modsModalContent.classList.add('animating-in');
+        setTimeout(() => {
+            modsModal.classList.remove('animating-in');
+            modsModalContent.classList.remove('animating-in');
+        }, 350);
+    });
+
+    document.getElementById('close-mods-modal')?.addEventListener('click', e => {
+        e.preventDefault();
+        modsModal.classList.add('animating-out');
+        modsModalContent.classList.add('animating-out');
+        setTimeout(() => {
+            modsModal.classList.add('hidden');
+            modsModal.classList.remove('animating-out');
+            modsModalContent.classList.remove('animating-out');
+        }, 250);
+    });
+
+    const settingsModal = document.getElementById('settings-modal');
+    const settingsModalContent = settingsModal.querySelector('.mods-modal-content');
     document.querySelector('.footer-item img[alt="Settings"]')?.parentElement.addEventListener('click', async () => {
-        document.getElementById('settings-modal').classList.remove('hidden');
+        settingsModal.classList.remove('hidden', 'animating-out');
+        settingsModal.classList.add('animating-in');
+        settingsModalContent.classList.remove('animating-out');
+        settingsModalContent.classList.add('animating-in');
+        setTimeout(() => {
+            settingsModal.classList.remove('animating-in');
+            settingsModalContent.classList.remove('animating-in');
+        }, 350);
         await loadLocale(localStorage.getItem('sporeLang') || langSelect.value);
         await validateSporePath();
         await validateGAPath();
     });
-    document.getElementById('close-settings-modal')?.addEventListener('click', e => { e.preventDefault(); document.getElementById('settings-modal').classList.add('hidden'); });
-    document.getElementById('close-mods-modal')?.addEventListener('click', e => { e.preventDefault(); document.getElementById('mods-modal').classList.add('hidden'); });
+    document.getElementById('close-settings-modal')?.addEventListener('click', e => {
+        e.preventDefault();
+        settingsModal.classList.add('animating-out');
+        settingsModalContent.classList.add('animating-out');
+        setTimeout(() => {
+            settingsModal.classList.add('hidden');
+            settingsModal.classList.remove('animating-out');
+            settingsModalContent.classList.remove('animating-out');
+        }, 250);
+    });
+
     document.getElementById('uninstall-mods-btn')?.addEventListener('click', async () => {
         if (!confirm(currentTranslations.uninstallAllConfirm)) return;
         alert((await window.electronAPI.uninstallAllMods()) ? currentTranslations.uninstallAllSuccess : currentTranslations.uninstallAllError);
@@ -81,15 +129,27 @@ window.addEventListener('DOMContentLoaded', async () => {
         });
     });
 
+    window.electronAPI.onUpdateAvailable((_, version) => {
+        newVersionAvailable = version;
+        const updatedTextEl = document.querySelector('[data-i18n="updatedText"]');
+        if (updatedTextEl) {
+            updatedTextEl.innerHTML = `${currentTranslations.updateAvailableText} <br><span style="color:#aaa;">${currentTranslations.newVersionLabel || 'New version:'} v${version}</span>`;
+        }
+        const updateBtn = document.getElementById('update-launcher-btn');
+        if (updateBtn) updateBtn.style.display = 'block';
+    });
+
     window.electronAPI.onUpdateDownloaded(() => {
         const updateBtn = document.getElementById('update-launcher-btn');
         if (updateBtn) updateBtn.style.display = 'block';
         const updatedTextEl = document.querySelector('[data-i18n="updatedText"]');
-        if (updatedTextEl) updatedTextEl.innerHTML = currentTranslations.updateAvailableText;
+        if (updatedTextEl) {
+            let versionInfo = newVersionAvailable ? `<br><span style="color:#aaa;">${currentTranslations.newVersionLabel || 'New version:'} v${newVersionAvailable}</span>` : '';
+            updatedTextEl.innerHTML = currentTranslations.updateAvailableText + versionInfo;
+        }
     });
 });
 
-let currentTranslations = {}, currentLang = 'en';
 async function loadLocale(lang) {
     const localePath = lang === 'es' ? 'locales/es.json' : 'locales/en.json';
     const response = await fetch(localePath);
@@ -111,6 +171,11 @@ async function loadLocale(lang) {
         const version = await window.electronAPI.getAppVersion();
         launcherTitleEl.innerHTML += ` <span style="color:#aaa;font-size:0.85em;">v${version}</span>`;
     }
+
+    const updatedTextEl = document.querySelector('[data-i18n="updatedText"]');
+    if (updatedTextEl && newVersionAvailable) {
+        updatedTextEl.innerHTML = `${currentTranslations.updateAvailableText} <br><span style="color:#aaa;">${currentTranslations.newVersionLabel || 'Nueva versión:'} v${newVersionAvailable}</span>`;
+    }
 }
 
 const langSelect = document.getElementById('lang-select');
@@ -119,8 +184,6 @@ if (langSelect) {
         const lang = langSelect.value;
         localStorage.setItem('sporeLang', lang);
         await loadLocale(lang);
-        const updatedTextEl = document.querySelector('[data-i18n="updatedText"]');
-        if (updatedTextEl && updatedTextEl.innerHTML.trim() !== '') updatedTextEl.innerHTML = currentTranslations.updateAvailableText;
         await validateSporePath();
         await validateGAPath();
     });

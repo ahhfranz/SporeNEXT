@@ -614,27 +614,62 @@ input:focus {
     box-shadow: 0 4px 16px #ff4d4f88;
 }
 
-
-
-
-@keyframes bounce {
-    0% {
-        transform: scale(1);
+@keyframes modalFadeIn {
+    from {
+        opacity: 0;
     }
 
-    40% {
-        transform: scale(1.45);
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes modalContentIn {
+    from {
+        opacity: 0;
+        transform: translateY(40px) scale(0.98);
     }
 
-    60% {
-        transform: scale(1.25);
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes modalFadeOut {
+    from {
+        opacity: 1;
     }
 
-    80% {
-        transform: scale(1.38);
+    to {
+        opacity: 0;
+    }
+}
+
+@keyframes modalContentOut {
+    from {
+        opacity: 1;
+        transform: translateY(0) scale(1);
     }
 
-    100% {
-        transform: scale(1.35);
+    to {
+        opacity: 0;
+        transform: translateY(40px) scale(0.98);
     }
+}
+
+.mods-modal.animating-in {
+    animation: modalFadeIn 0.25s forwards;
+}
+
+.mods-modal-content.animating-in {
+    animation: modalContentIn 0.35s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.mods-modal.animating-out {
+    animation: modalFadeOut 0.2s forwards;
+}
+
+.mods-modal-content.animating-out {
+    animation: modalContentOut 0.25s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
