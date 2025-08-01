@@ -60,13 +60,23 @@ function detectSporeBasePath() {
 }
 
 function detectSporeDataPath() {
-    const base = detectSporeBasePath();
-    const dataPath = base ? path.join(base, 'Data') : '';
-    return dataPath && fs.existsSync(dataPath) ? dataPath : '';
+    const paths = [
+        'C:\\Program Files (x86)\\Steam\\steamapps\\common\\spore\\Data',
+        'C:\\Program Files\\Steam\\steamapps\\common\\spore\\Data',
+        'D:\\SteamLibrary\\steamapps\\common\\spore\\Data',
+        path.join(detectSporeBasePath(), 'Data'),
+        'C:\\Program Files\\EA Games\\Spore\\Data',
+        'C:\\Spore\\Data',
+        'D:\\Spore\\Data'
+    ];
+    return paths.find(p => fs.existsSync(p)) || '';
 }
 
 function detectGADataPath() {
     const paths = [
+        'C:\\Program Files (x86)\\Steam\\steamapps\\common\\spore\\DataEP1',
+        'C:\\Program Files\\Steam\\steamapps\\common\\spore\\DataEP1',
+        'D:\\SteamLibrary\\steamapps\\common\\spore\\DataEP1',
         path.join(detectSporeBasePath(), 'DataEP1'),
         'C:\\Program Files\\EA Games\\Spore\\SPORE Galactic Adventures\\Data',
         'C:\\Program Files (x86)\\EA Games\\Spore\\SPORE Galactic Adventures\\Data',
@@ -102,30 +112,32 @@ function createWindow() {
         backgroundColor: '#222222'
     });
     mainWindow.loadFile(path.join(__dirname, '../../public/index.html'));
+
+    if (!app.isPackaged) {
+        mainWindow.webContents.openDevTools({ mode: 'detach' });
+    } else {
+        mainWindow.webContents.on('before-input-event', (event, input) => {
+            if (
+                input.key === 'F12' ||
+                (input.control && input.shift && input.key.toLowerCase() === 'i')
+            ) {
+                event.preventDefault();
+            }
+        });
+        mainWindow.webContents.on('devtools-opened', () => {
+            mainWindow.webContents.closeDevTools();
+        });
+    }
+
     mainWindow.on('maximize', e => { e.preventDefault(); mainWindow.unmaximize(); });
     mainWindow.on('closed', () => { mainWindow = null; });
-
-    mainWindow.on('close', (e) => {
-        if (isInstalling) {
-            const t = translations;
-            const choice = dialog.showMessageBoxSync(mainWindow, {
-                type: 'warning',
-                buttons: [t.cancel || 'Cancelar', t.closeAnyway || 'Cerrar de todos modos'],
-                defaultId: 0,
-                cancelId: 0,
-                title: t.installInProgressTitle || 'Instalación en curso',
-                message: t.closeWhileInstalling || 'Hay una instalación en curso. Si cierras el launcher ahora, la instalación puede quedar incompleta o dañada.\n\n¿Seguro que quieres cerrar?'
-            });
-            if (choice === 0) {
-                e.preventDefault();
-            }
-        }
-    });
+    mainWindow.on('close', (e) => { /* ... */ });
 }
 
 app.on('ready', () => {
     createWindow();
-    autoUpdater.checkForUpdatesAndNotify();
+    autoUpdater.autoDownload = false;
+    autoUpdater.checkForUpdates();
 
     autoUpdater.on('update-available', (info) => {
         mainWindow?.webContents.send('update-available', info.version);
@@ -149,6 +161,15 @@ ipcMain.handle('open-mods-folder', () => {
 ipcMain.handle('open-discord', () => shell.openExternal('https://discord.com/users/640310157796179978'));
 
 ipcMain.handle('set-installing', (_e, installing) => { isInstalling = !!installing; });
+
+ipcMain.handle('download-update', async () => {
+    try {
+        await autoUpdater.downloadUpdate();
+        return true;
+    } catch {
+        return false;
+    }
+});
 
 ipcMain.handle('install-mod', async (event, modFile, target) => {
     const destPath = target === 'ga' ? (userGAPath || detectGADataPath()) : (userSporePath || detectSporeDataPath());
