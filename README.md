@@ -15,7 +15,7 @@ This launcher provides an easy, automated way to enhance your Spore experience w
 * ✅ **Multilanguage support:** Spanish and English.
 * ✅ **Modern and intuitive interface.**
 * ✅ **Direct download of the modpack** — no manual downloads needed.
-
+ 
 ---
 
 ## 🚀 Getting Started
