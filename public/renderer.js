@@ -11,10 +11,11 @@ window.addEventListener('DOMContentLoaded', async () => {
     document.querySelector('.window-close')?.addEventListener('click', () => window.electronAPI.closeWindow());
     document.querySelector('.window-minimize')?.addEventListener('click', () => window.electronAPI.minimizeWindow());
     document.getElementById('discord-btn')?.addEventListener('click', () => window.electronAPI.openDiscord());
-    document.getElementById('update-launcher-btn')?.addEventListener('click', function () {
+    document.getElementById('update-launcher-btn')?.addEventListener('click', async function () {
         if (confirm(currentTranslations.updateConfirm)) {
             this.disabled = true;
             this.textContent = currentTranslations.updatingNow;
+            await window.electronAPI.downloadUpdate();
             window.electronAPI.updateLauncher();
         }
     });

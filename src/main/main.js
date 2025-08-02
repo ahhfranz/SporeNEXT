@@ -199,6 +199,10 @@ ipcMain.handle('install-mod', async (event, modFile, target) => {
     const modsDir = path.join(app.getPath('userData'), 'mods');
     const modSource = path.join(modsDir, modFile);
 
+    if (!fs.existsSync(modsDir)) {
+        fs.mkdirSync(modsDir, { recursive: true });
+    }
+
     if (fs.existsSync(modSource)) {
         try { fs.unlinkSync(modSource); } catch { }
     }
