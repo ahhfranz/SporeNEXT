@@ -1,6 +1,6 @@
 {
   "name": "spore-next",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "main": "src/main/main.js",
   "type": "module",
   "scripts": {

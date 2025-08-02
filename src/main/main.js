@@ -4,6 +4,9 @@ import path from 'path';
 import fs from 'fs';
 import { fork } from 'child_process';
 import pkg from 'electron-updater';
+import http from 'http';
+
+app.setName('Spore NEXT');
 
 const { autoUpdater } = pkg;
 const __filename = fileURLToPath(import.meta.url);
@@ -15,6 +18,10 @@ let isInstalling = false;
 
 let currentLang = 'en';
 let translations = {};
+
+const programFilesX86 = process.env['ProgramFiles(x86)'] || 'C:\\Program Files (x86)';
+const programFiles = process.env['ProgramFiles'] || 'C:\\Program Files';
+const userProfile = process.env['USERPROFILE'] || 'C:\\Users\\Default';
 
 function loadTranslations(lang) {
     const localePath = path.join(__dirname, '../../public/locales', lang + '.json');
@@ -32,8 +39,11 @@ loadTranslations(currentLang);
 
 function downloadModZip(url, destPath, onProgress) {
     return new Promise((resolve, reject) => {
-        http.get(url, (response) => {
-            if (response.statusCode !== 200) return reject(new Error('Failed to download mod.zip'));
+        http.get(url, { headers: { 'User-Agent': 'Mozilla/5.0' } }, (response) => {
+            if (response.statusCode !== 200) {
+                console.error('HTTP status:', response.statusCode, 'URL:', url);
+                return reject(new Error('Failed to download mod.zip'));
+            }
             const total = parseInt(response.headers['content-length'], 10);
             let downloaded = 0;
             const file = fs.createWriteStream(destPath);
@@ -43,16 +53,20 @@ function downloadModZip(url, destPath, onProgress) {
             });
             response.pipe(file);
             file.on('finish', () => file.close(() => resolve(true)));
-        }).on('error', err => fs.unlink(destPath, () => reject(err)));
+        }).on('error', err => {
+            console.error('Download error:', err);
+            fs.unlink(destPath, () => reject(err));
+        });
     });
 }
 
 function detectSporeBasePath() {
     const bases = [
-        'C:\\Program Files (x86)\\Steam\\steamapps\\common\\spore',
-        'C:\\Program Files\\Steam\\steamapps\\common\\spore',
+        path.join(programFilesX86, 'Steam', 'steamapps', 'common', 'spore'),
+        path.join(programFiles, 'Steam', 'steamapps', 'common', 'spore'),
         'D:\\SteamLibrary\\steamapps\\common\\spore',
-        'C:\\Program Files\\EA Games\\Spore',
+        path.join(programFiles, 'EA Games', 'Spore'),
+        path.join(programFilesX86, 'EA Games', 'Spore'),
         'C:\\Spore',
         'D:\\Spore'
     ];
@@ -60,12 +74,14 @@ function detectSporeBasePath() {
 }
 
 function detectSporeDataPath() {
+    const base = detectSporeBasePath();
     const paths = [
-        'C:\\Program Files (x86)\\Steam\\steamapps\\common\\spore\\Data',
-        'C:\\Program Files\\Steam\\steamapps\\common\\spore\\Data',
+        path.join(programFilesX86, 'Steam', 'steamapps', 'common', 'spore', 'Data'),
+        path.join(programFiles, 'Steam', 'steamapps', 'common', 'spore', 'Data'),
         'D:\\SteamLibrary\\steamapps\\common\\spore\\Data',
-        path.join(detectSporeBasePath(), 'Data'),
-        'C:\\Program Files\\EA Games\\Spore\\Data',
+        base ? path.join(base, 'Data') : '',
+        path.join(programFiles, 'EA Games', 'Spore', 'Data'),
+        path.join(programFilesX86, 'EA Games', 'Spore', 'Data'),
         'C:\\Spore\\Data',
         'D:\\Spore\\Data'
     ];
@@ -73,13 +89,14 @@ function detectSporeDataPath() {
 }
 
 function detectGADataPath() {
+    const base = detectSporeBasePath();
     const paths = [
-        'C:\\Program Files (x86)\\Steam\\steamapps\\common\\spore\\DataEP1',
-        'C:\\Program Files\\Steam\\steamapps\\common\\spore\\DataEP1',
+        path.join(programFilesX86, 'Steam', 'steamapps', 'common', 'spore', 'DataEP1'),
+        path.join(programFiles, 'Steam', 'steamapps', 'common', 'spore', 'DataEP1'),
         'D:\\SteamLibrary\\steamapps\\common\\spore\\DataEP1',
-        path.join(detectSporeBasePath(), 'DataEP1'),
-        'C:\\Program Files\\EA Games\\Spore\\SPORE Galactic Adventures\\Data',
-        'C:\\Program Files (x86)\\EA Games\\Spore\\SPORE Galactic Adventures\\Data',
+        base ? path.join(base, 'DataEP1') : '',
+        path.join(programFiles, 'EA Games', 'Spore', 'SPORE Galactic Adventures', 'Data'),
+        path.join(programFilesX86, 'EA Games', 'Spore', 'SPORE Galactic Adventures', 'Data'),
         'D:\\Spore\\SPORE Galactic Adventures\\Data'
     ];
     return paths.find(p => fs.existsSync(p)) || '';
@@ -92,13 +109,14 @@ function detectSporeExe() {
 }
 
 function detectGAExe() {
+    const base = detectSporeBasePath();
     const exes = [
-        path.join(detectSporeBasePath(), 'SporebinEP1', 'SporeApp.exe'),
-        'C:\\Program Files\\EA Games\\Spore\\SPORE Galactic Adventures\\SporebinEP1\\SporeApp.exe',
-        'C:\\Program Files (x86)\\EA Games\\Spore\\SPORE Galactic Adventures\\SporebinEP1\\SporeApp.exe',
+        base ? path.join(base, 'SporebinEP1', 'SporeApp.exe') : '',
+        path.join(programFiles, 'EA Games', 'Spore', 'SPORE Galactic Adventures', 'SporebinEP1', 'SporeApp.exe'),
+        path.join(programFilesX86, 'EA Games', 'Spore', 'SPORE Galactic Adventures', 'SporebinEP1', 'SporeApp.exe'),
         'D:\\Spore\\SPORE Galactic Adventures\\SporebinEP1\\SporeApp.exe'
     ];
-    return exes.find(exe => fs.existsSync(exe)) || '';
+    return exes.find(exe => exe && fs.existsSync(exe)) || '';
 }
 
 function createWindow() {
@@ -158,7 +176,7 @@ ipcMain.handle('open-mods-folder', () => {
     if (!fs.existsSync(modsPath)) fs.mkdirSync(modsPath, { recursive: true });
     shell.openPath(modsPath);
 });
-ipcMain.handle('open-discord', () => shell.openExternal('https://discord.com/users/640310157796179978'));
+ipcMain.handle('open-discord', () => shell.openExternal('https://discord.gg/JqZyyugs5a'));
 
 ipcMain.handle('set-installing', (_e, installing) => { isInstalling = !!installing; });
 
@@ -173,25 +191,35 @@ ipcMain.handle('download-update', async () => {
 
 ipcMain.handle('install-mod', async (event, modFile, target) => {
     const destPath = target === 'ga' ? (userGAPath || detectGADataPath()) : (userSporePath || detectSporeDataPath());
-    if (!destPath || !fs.existsSync(destPath)) return false;
+    if (!destPath || !fs.existsSync(destPath)) {
+        console.error('Invalid destPath:', destPath);
+        return false;
+    }
     const configDir = path.join(destPath, 'Config');
-    if (!fs.existsSync(configDir)) fs.mkdirSync(configDir, { recursive: true });
     const modsDir = path.join(app.getPath('userData'), 'mods');
-    if (!fs.existsSync(modsDir)) fs.mkdirSync(modsDir, { recursive: true });
     const modSource = path.join(modsDir, modFile);
 
-    const workerPath = path.join(__dirname, 'installWorker.js');
     if (fs.existsSync(modSource)) {
         try { fs.unlinkSync(modSource); } catch { }
     }
+
     try {
         await downloadModZip(MOD_ZIP_URL, modSource, p => {
             if (mainWindow && !mainWindow.isDestroyed()) {
                 event.sender.send('mod-install-progress', p);
             }
         });
-    } catch { return false; }
-    if (!fs.existsSync(modSource)) return false;
+    } catch {
+        console.error('Download failed');
+        return false;
+    }
+
+    if (!fs.existsSync(modSource)) {
+        console.error('modSource does not exist after download:', modSource);
+        return false;
+    }
+
+    const workerPath = path.join(__dirname, 'installWorker.js');
     const installResult = await new Promise(resolve => {
         const child = fork(workerPath, [modSource, destPath, configDir], { stdio: ['pipe', 'pipe', 'pipe', 'ipc'] });
         child.on('message', msg => {
@@ -213,23 +241,25 @@ ipcMain.handle('browse-folder', async () => {
     const result = await dialog.showOpenDialog({ properties: ['openDirectory'] });
     return result.canceled || result.filePaths.length === 0 ? '' : result.filePaths[0];
 });
+
 ipcMain.handle('check-spore-path', (_e, folderPath, type) => {
     if (!folderPath) return false;
     const normalized = path.normalize(folderPath).replace(/[\\\/]+$/, '');
-    if (type === 'spore')
-        return fs.existsSync(normalized) && path.basename(normalized).toLowerCase() === 'data';
+    const baseName = path.basename(normalized).toLowerCase();
+
+    if (type === 'spore') {
+        return fs.existsSync(normalized) && baseName === 'data';
+    }
     if (type === 'ga') {
-        const isDataEP1 = fs.existsSync(normalized) && path.basename(normalized).toLowerCase() === 'dataep1';
-        const isEAData = fs.existsSync(normalized) && path.basename(normalized).toLowerCase() === 'data' && normalized.toLowerCase().includes('spore galactic adventures');
-        return isDataEP1 || isEAData;
+        return fs.existsSync(normalized) && baseName === 'dataep1';
     }
     return false;
 });
 
 ipcMain.handle('launch-spore', () => {
     const steamPaths = [
-        'C:\\Program Files (x86)\\Steam\\steamapps\\common\\spore',
-        'C:\\Program Files\\Steam\\steamapps\\common\\spore',
+        path.join(programFilesX86, 'Steam', 'steamapps', 'common', 'spore'),
+        path.join(programFiles, 'Steam', 'steamapps', 'common', 'spore'),
         'D:\\SteamLibrary\\steamapps\\common\\spore'
     ];
     const exePath = detectSporeExe();
@@ -245,8 +275,8 @@ ipcMain.handle('launch-spore', () => {
 
 ipcMain.handle('launch-ga', () => {
     const steamPaths = [
-        'C:\\Program Files (x86)\\Steam\\steamapps\\common\\spore',
-        'C:\\Program Files\\Steam\\steamapps\\common\\spore',
+        path.join(programFilesX86, 'Steam', 'steamapps', 'common', 'spore'),
+        path.join(programFiles, 'Steam', 'steamapps', 'common', 'spore'),
         'D:\\SteamLibrary\\steamapps\\common\\spore'
     ];
     const exePath = detectGAExe();
@@ -306,8 +336,13 @@ ipcMain.handle('uninstall-all-mods', async () => {
         const configFiles = ['ConfigManager.txt', 'Properties.txt'];
         const folders = [
             detectSporeDataPath(), detectGADataPath(),
-            'C:\\Program Files\\EA Games\\Spore\\Data', 'C:\\Program Files (x86)\\EA Games\\Spore\\Data', 'D:\\Spore\\Data',
-            'C:\\Program Files\\EA Games\\Spore\\SPORE Galactic Adventures\\Data', 'C:\\Program Files (x86)\\EA Games\\Spore\\SPORE Galactic Adventures\\Data', 'D:\\Spore\\SPORE Galactic Adventures\\Data'
+            path.join(programFiles, 'EA Games', 'Spore', 'Data'),
+            path.join(programFilesX86, 'EA Games', 'Spore', 'Data'),
+            'C:\\Spore\\Data',
+            'D:\\Spore\\Data',
+            path.join(programFiles, 'EA Games', 'Spore', 'SPORE Galactic Adventures', 'Data'),
+            path.join(programFilesX86, 'EA Games', 'Spore', 'SPORE Galactic Adventures', 'Data'),
+            'D:\\Spore\\SPORE Galactic Adventures\\Data'
         ].filter((f, i, arr) => f && fs.existsSync(f) && arr.indexOf(f) === i);
         let success = true;
         for (const folder of folders) {
