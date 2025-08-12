@@ -64,11 +64,16 @@ function detectSporeBasePath() {
     const bases = [
         path.join(programFilesX86, 'Steam', 'steamapps', 'common', 'spore'),
         path.join(programFiles, 'Steam', 'steamapps', 'common', 'spore'),
+        'C:\\steam\\steamapps\\common\\Spore',
         'D:\\SteamLibrary\\steamapps\\common\\spore',
+        'E:\\SteamLibrary\\steamapps\\common\\spore',
+        'D:\\steam\\steamapps\\common\\Spore',
+        'E:\\steam\\steamapps\\common\\Spore',
         path.join(programFiles, 'EA Games', 'Spore'),
         path.join(programFilesX86, 'EA Games', 'Spore'),
         'C:\\Spore',
-        'D:\\Spore'
+        'D:\\Spore',
+        'E:\\Spore'
     ];
     return bases.find(base => fs.existsSync(base)) || '';
 }
@@ -78,12 +83,17 @@ function detectSporeDataPath() {
     const paths = [
         path.join(programFilesX86, 'Steam', 'steamapps', 'common', 'spore', 'Data'),
         path.join(programFiles, 'Steam', 'steamapps', 'common', 'spore', 'Data'),
+        'C:\\steam\\steamapps\\common\\Spore\\Data',
         'D:\\SteamLibrary\\steamapps\\common\\spore\\Data',
+        'E:\\SteamLibrary\\steamapps\\common\\spore\\Data',
+        'D:\\steam\\steamapps\\common\\Spore\\Data',
+        'E:\\steam\\steamapps\\common\\Spore\\Data',
         base ? path.join(base, 'Data') : '',
         path.join(programFiles, 'EA Games', 'Spore', 'Data'),
         path.join(programFilesX86, 'EA Games', 'Spore', 'Data'),
         'C:\\Spore\\Data',
-        'D:\\Spore\\Data'
+        'D:\\Spore\\Data',
+        'E:\\Spore\\Data'
     ];
     return paths.find(p => fs.existsSync(p)) || '';
 }
@@ -93,19 +103,29 @@ function detectGADataPath() {
     const paths = [
         path.join(programFilesX86, 'Steam', 'steamapps', 'common', 'spore', 'DataEP1'),
         path.join(programFiles, 'Steam', 'steamapps', 'common', 'spore', 'DataEP1'),
+        'C:\\steam\\steamapps\\common\\Spore\\DataEP1',
         'D:\\SteamLibrary\\steamapps\\common\\spore\\DataEP1',
+        'E:\\SteamLibrary\\steamapps\\common\\spore\\DataEP1',
+        'D:\\steam\\steamapps\\common\\Spore\\DataEP1',
+        'E:\\steam\\steamapps\\common\\Spore\\DataEP1',
         base ? path.join(base, 'DataEP1') : '',
         path.join(programFiles, 'EA Games', 'Spore', 'SPORE Galactic Adventures', 'Data'),
         path.join(programFilesX86, 'EA Games', 'Spore', 'SPORE Galactic Adventures', 'Data'),
-        'D:\\Spore\\SPORE Galactic Adventures\\Data'
+        'D:\\Spore\\SPORE Galactic Adventures\\Data',
+        'E:\\Spore\\SPORE Galactic Adventures\\Data'
     ];
     return paths.find(p => fs.existsSync(p)) || '';
 }
 
 function detectSporeExe() {
     const base = detectSporeBasePath();
-    const exePath = base ? path.join(base, 'SporeBin', 'SporeApp.exe') : '';
-    return exePath && fs.existsSync(exePath) ? exePath : '';
+    const exes = [
+        base ? path.join(base, 'SporeBin', 'SporeApp.exe') : '',
+        'C:\\steam\\steamapps\\common\\Spore\\Sporebin\\SporeApp.exe',
+        'D:\\steam\\steamapps\\common\\Spore\\Sporebin\\SporeApp.exe',
+        'E:\\steam\\steamapps\\common\\Spore\\Sporebin\\SporeApp.exe'
+    ];
+    return exes.find(exe => exe && fs.existsSync(exe)) || '';
 }
 
 function detectGAExe() {
@@ -114,7 +134,11 @@ function detectGAExe() {
         base ? path.join(base, 'SporebinEP1', 'SporeApp.exe') : '',
         path.join(programFiles, 'EA Games', 'Spore', 'SPORE Galactic Adventures', 'SporebinEP1', 'SporeApp.exe'),
         path.join(programFilesX86, 'EA Games', 'Spore', 'SPORE Galactic Adventures', 'SporebinEP1', 'SporeApp.exe'),
-        'D:\\Spore\\SPORE Galactic Adventures\\SporebinEP1\\SporeApp.exe'
+        'C:\\steam\\steamapps\\common\\Spore\\SporebinEP1\\SporeApp.exe',
+        'D:\\Spore\\SPORE Galactic Adventures\\SporebinEP1\\SporeApp.exe',
+        'E:\\Spore\\SPORE Galactic Adventures\\SporebinEP1\\SporeApp.exe',
+        'D:\\steam\\steamapps\\common\\Spore\\SporebinEP1\\SporeApp.exe',
+        'E:\\steam\\steamapps\\common\\Spore\\SporebinEP1\\SporeApp.exe'
     ];
     return exes.find(exe => exe && fs.existsSync(exe)) || '';
 }
