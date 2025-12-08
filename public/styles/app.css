@@ -1,0 +1,1264 @@
+html {
+    font-size: 16px;
+}
+
+html,
+body {
+    height: 100%;
+    width: 100%;
+}
+
+body {
+    background: #222;
+    margin: 0;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    overflow: hidden;
+    user-select: none;
+}
+
+button:focus,
+.filter-btn:focus {
+    outline: none !important;
+    box-shadow: none !important;
+    border-color: inherit !important;
+}
+
+input:focus {
+    outline: none !important;
+    border: none !important;
+}
+
+.background-video {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: 0;
+    pointer-events: none;
+}
+
+.launcher-window {
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    border-radius: 8px;
+}
+
+.launcher-window::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.8);
+    z-index: 1;
+    border-radius: 8px;
+}
+
+.launcher-header,
+.launcher-content,
+.launcher-footer {
+    position: relative;
+    z-index: 1;
+    user-select: none;
+}
+
+.launcher-header {
+    position: fixed;
+    top: 0;
+    left: 220px;
+    right: 0;
+    z-index: 10;
+    -webkit-app-region: drag;
+    display: flex;
+    align-items: center;
+    height: 56px;
+}
+
+.logo {
+    width: 32px;
+    height: 32px;
+    margin-right: 12px;
+}
+
+.launcher-title {
+    color: #fff;
+    font-size: 0.9em;
+    margin-right: auto;
+}
+
+.window-controls,
+.modal-window-controls {
+    position: absolute;
+    right: 25px;
+    top: 10px;
+    display: flex;
+    gap: 8px;
+    z-index: 20;
+}
+
+.window-close,
+.window-minimize,
+.window-maximize {
+    background: transparent;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    font-size: 25px;
+    cursor: pointer;
+    width: 36px;
+    height: 36px;
+    -webkit-app-region: no-drag;
+    display: flex;
+    justify-content: center;
+    transition: color 0.18s, box-shadow 0.18s;
+    box-shadow: 0 2px 8px #2222;
+}
+
+.window-close:hover {
+    color: #ff4d4f;
+}
+
+.window-minimize:hover {
+    color: #4d9cff;
+}
+
+.window-maximize:hover {
+    color: #4d9cff;
+}
+
+.launcher-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 0;
+    width: 100%;
+    padding-left: 100px;
+}
+
+.launcher-content h2 {
+    color: #fff;
+    margin-bottom: 12px;
+    font-size: 2em;
+    font-weight: bold;
+}
+
+.launcher-content p {
+    color: #fff;
+    font-size: 1.2em;
+    text-align: center;
+    margin-bottom: 24px;
+}
+
+.play-btn-spore {
+    background: #2884f5;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 12px 32px;
+    font-size: 1.1em;
+    cursor: pointer;
+    margin-top: 8px;
+    transition: background 0.2s;
+    align-self: center;
+}
+
+.play-btn-spore:hover {
+    background: #0854b1;
+    box-shadow: 0 0 35px #0854b1;
+}
+
+.play-btn-ga {
+    background: #ff7f50;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 12px 32px;
+    font-size: 1.1em;
+    cursor: pointer;
+    margin-top: 8px;
+    transition: background 0.2s;
+    align-self: center;
+}
+
+.play-btn-ga:hover {
+    background: #d44d1b;
+    box-shadow: 0 0 35px #d44d1b;
+}
+
+.play-btn-spore,
+.play-btn-ga {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+.play-btn-spore img,
+.play-btn-ga img {
+    width: 30px;
+    height: 30px;
+    margin-left: -8px;
+    display: inline-block;
+    vertical-align: middle;
+    -webkit-user-drag: none;
+}
+
+#update-launcher-btn {
+    display: none;
+    margin-top: 20px;
+    background: #5eb173;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 32px;
+    font-size: 1.1em;
+    cursor: pointer;
+    box-shadow: 0 2px 6px #222;
+    transition: background 0.18s, box-shadow 0.18s;
+}
+
+#update-launcher-btn:hover {
+    background: #327e45;
+    box-shadow: 0 4px 16px #327e45;
+}
+
+.launcher-buttons {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+}
+
+.sidebar-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 18px 18px 18px 24px;
+    background: #131313;
+    min-height: 56px;
+}
+
+.sidebar-header .logo {
+    width: 32px;
+    height: 32px;
+    margin-right: 0;
+}
+
+.sidebar-header .launcher-title {
+    color: #fff;
+    font-size: 1.05em;
+    font-weight: bold;
+    margin: 0;
+}
+
+.launcher-sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 220px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    z-index: 2;
+    background: rgba(26, 26, 26, 0.85);
+    box-shadow: 2px 0 8px #0008;
+}
+
+.launcher-footer {
+    display: flex;
+    flex-direction: column;
+    margin-top: auto;
+    padding-top: 32px;
+    gap: 8px;
+    box-shadow: none;
+    width: 100%;
+    height: 100%;
+}
+
+.footer-items-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: auto;
+}
+
+.footer-settings {
+    margin-top: auto;
+    margin-bottom: 1px;
+}
+
+.footer-item {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    color: #aaa;
+    font-size: 1em;
+    transition: color 0.2s;
+    cursor: pointer;
+    padding: 12px 0;
+    border-left: 4px solid transparent;
+}
+
+.footer-item img {
+    width: 28px;
+    height: 28px;
+    margin-bottom: 0;
+    filter: brightness(0.7) invert(0.7);
+    transition: filter 0.4s ease;
+}
+
+.footer-item:hover,
+.footer-item:focus {
+    background: #3336;
+    color: #fff;
+    border-left: 4px solid #1F75CC;
+}
+
+.footer-item:hover img,
+.footer-item:focus img {
+    filter: brightness(0) saturate(100%) invert(35%) sepia(94%) saturate(747%) hue-rotate(175deg) brightness(97%) contrast(105%);
+    transform: scale(1.1);
+}
+
+
+.footer-item span {
+    font-size: 1em;
+    color: inherit;
+    text-align: left;
+    margin: 0;
+    padding: 0;
+    line-height: 1.1;
+}
+
+.footer-item img,
+.footer-item span {
+    padding-left: 24px;
+}
+
+.mods-modal {
+    position: fixed;
+    top: 0;
+    left: 220px;
+    width: calc(100vw - 220px);
+    height: 100vh;
+    align-items: center;
+    z-index: 100;
+    background: #131313;
+    transition: none;
+}
+
+.mods-modal.hidden {
+    display: none;
+}
+
+.mods-modal-content {
+    background: #131313;
+    padding: 32px 32px 24px 32px;
+    min-width: 900px;
+    max-height: none;
+    height: auto;
+    overflow-y: auto;
+    flex-direction: column;
+    align-items: stretch;
+    position: relative;
+}
+
+.mods-modal-content h3 {
+    color: #fff;
+    font-size: 1em;
+}
+
+.mod-details-layout {
+    display: flex;
+    flex-direction: row;
+    gap: 32px;
+    width: 100%;
+    justify-content: center;
+    align-items: flex-start;
+}
+
+.mod-image-section {
+    flex: 0 0 140px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.mod-detail-img {
+    width: 120px;
+    height: 120px;
+    object-fit: contain;
+    border-radius: 12px;
+    -webkit-user-drag: none;
+    pointer-events: auto;
+    margin-top: 100px;
+}
+
+.mod-info-section {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: flex-start;
+    color: #fff;
+}
+
+.mods-title-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 2px;
+}
+
+.mods-title-icon {
+    width: 28px;
+    height: 28px;
+    vertical-align: middle;
+}
+
+.mods-title-text {
+    color: #fff;
+    font-size: 1.18em;
+    font-weight: bold;
+    letter-spacing: 1px;
+}
+
+.mod-title {
+    font-size: 1.3em;
+    font-weight: bold;
+    margin: 0;
+}
+
+.mod-desc {
+    font-size: 1em;
+}
+
+.mod-features {
+    margin: 0 0 16px 0;
+    padding-left: 18px;
+    font-size: 1em;
+}
+
+.mod-features li {
+    margin-bottom: 4px;
+}
+
+.mod-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+    align-items: flex-start;
+}
+
+.install-mod-btn {
+    margin-top: 4px;
+    background: linear-gradient(90deg, #4d9cff 60%, #3777d6 100%);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 8px 22px;
+    padding-left: 20px;
+    font-size: 1em;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 2px 8px #2226;
+    transition: background 0.18s, box-shadow 0.18s;
+}
+
+.install-mod-btn:hover {
+    background: linear-gradient(90deg, #3777d6 60%, #4d9cff 100%);
+    box-shadow: 0 4px 16px #4d9cff88;
+}
+
+.install-mod-btn.ga-btn {
+    background: linear-gradient(90deg, #ffb347 60%, #ff7f50 100%);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 8px 22px;
+    padding-left: 20px;
+    font-size: 1em;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 2px 8px #2226;
+    transition: background 0.18s, box-shadow 0.18s;
+}
+
+.install-mod-btn.ga-btn:hover {
+    background: linear-gradient(90deg, #ff7f50 60%, #ffb347 100%);
+    box-shadow: 0 4px 16px #ffb34788;
+}
+
+.install-mod-btn img {
+    width: 25px;
+    height: 25px;
+    margin-right: 3px;
+    margin-left: -6px;
+    vertical-align: middle;
+    -webkit-user-drag: none;
+}
+
+.close-modal-link {
+    position: absolute;
+    top: 18px;
+    right: 18px;
+    font-size: 2em;
+    color: #fff;
+    border-radius: 50%;
+    width: 38px;
+    height: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    box-shadow: 0 2px 8px #2224;
+    cursor: pointer;
+    transition: background 0.18s, color 0.18s, box-shadow 0.18s;
+    z-index: 10;
+    -webkit-user-drag: none;
+}
+
+.close-modal-link:hover {
+    color: #4d9cff;
+}
+
+.install-progress {
+    width: 100%;
+    margin-top: 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.install-progress.hidden {
+    display: none;
+}
+
+.progress-bar {
+    width: 100%;
+    height: 18px;
+    background: #23272f;
+    border-radius: 6px;
+    overflow: hidden;
+    margin-bottom: 10px;
+    position: relative;
+}
+
+.progress-bar-spore {
+    border: 1px solid #4d9cff;
+}
+
+.progress-bar-ga {
+    border: 1px solid #ffb347;
+}
+
+.mod-progress-bar {
+    position: relative;
+    height: 18px;
+    max-width: 160px;
+    border-radius: 6px;
+    background: #23272f;
+    overflow: hidden;
+}
+
+.progress-bar-fill {
+    background: #4d9cff;
+    z-index: 1;
+}
+
+.progress-bar-fill-uninstall {
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    background: #ff4d4f;
+    border-radius: 6px;
+    transition: width 5s;
+    z-index: 2;
+    display: block;
+}
+
+.progress-bar-fill,
+.progress-bar-fill-uninstall {
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    border-radius: 6px;
+    transition: width 5s;
+    z-index: 1;
+}
+
+.progress-bar-fill-spore {
+    height: 100%;
+    background: linear-gradient(90deg, #4d9cff 60%, #3777d6 100%);
+    border-radius: 6px;
+    transition: width 0.3s;
+}
+
+.progress-text {
+    color: #fff;
+    font-size: 0.95em;
+}
+
+.settings-modal-content {
+    min-width: 420px;
+    padding: 28px 28px 18px 28px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    min-height: unset;
+    height: auto;
+}
+
+.settings-title {
+    color: #fff;
+    font-size: 1.3em;
+    font-weight: bold;
+    margin-bottom: 18px;
+}
+
+.settings-paths {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+}
+
+.settings-path-block {
+    width: 100%;
+}
+
+.settings-label {
+    color: #fff;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 10px;
+}
+
+.settings-label-icon {
+    width: 18px;
+    height: 18px;
+    vertical-align: middle;
+    -webkit-user-drag: none;
+}
+
+.settings-path-row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin-top: 6px;
+}
+
+.settings-path-input {
+    width: 500px;
+    background: #444;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 7px 14px;
+    font-size: 1em;
+}
+
+.settings-browse-btn {
+    background: #333;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 7px 14px;
+    cursor: pointer;
+    font-size: 1em;
+    transition: background 0.18s;
+}
+
+.settings-browse-btn:hover {
+    background: #3777d6;
+}
+
+.settings-lang-row {
+    width: auto;
+    display: flex;
+    flex-direction: column;
+    margin-top: 22px;
+    gap: 0;
+}
+
+.settings-lang-select {
+    width: 60%;
+    background: #444;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 7px 14px;
+    font-size: 1em;
+    margin-top: 20px;
+    cursor: pointer;
+    outline: none;
+}
+
+.settings-lang-row-flex {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    width: 50%;
+    margin-top: 22px;
+}
+
+.settings-lang-group {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+
+.mods-table-container {
+    width: 100%;
+    background: #181818;
+    scrollbar-width: thin;
+    scrollbar-color: #2e2e2e #232427;
+    padding: 0;
+    max-height: 90vh;
+    overflow-y: auto;
+    overflow-x: auto;
+    display: block;
+}
+
+
+.mods-table td,
+.mods-table th {
+    white-space: normal;
+    word-break: break-word;
+}
+
+.mods-table th:nth-child(1),
+.mods-table td:nth-child(1) {
+    width: 5%;
+    white-space: normal;
+}
+
+.mods-table th:nth-child(2),
+.mods-table td:nth-child(2) {
+    width: 5%;
+    white-space: normal;
+}
+
+.mods-table th:nth-child(3),
+.mods-table td:nth-child(3) {
+    width: 3%;
+    white-space: normal;
+    font-weight: bold;
+}
+
+.mods-table th:nth-child(4),
+.mods-table td:nth-child(4) {
+    width: 13%;
+    white-space: normal;
+    word-break: break-word;
+}
+
+.mods-table th:nth-child(5),
+.mods-table td:nth-child(5) {
+    width: 2%;
+    white-space: normal;
+    padding: 0px 0 0 35px;
+}
+
+.mods-table th:nth-child(6),
+.mods-table td:nth-child(6) {
+    width: 3%;
+    white-space: normal;
+    font-weight: bold;
+}
+
+.mods-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0 8px;
+    background: transparent;
+    table-layout: fixed;
+}
+
+.mods-table tbody {
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.mods-table thead tr th {
+    color: #fff;
+    font-weight: bold;
+    background: #1f1f1f;
+    border: none;
+    text-align: left;
+}
+
+.mods-table thead th {
+    position: sticky;
+    top: 0px;
+    z-index: 3;
+    background: #292a2d;
+}
+
+.mods-table tbody tr {
+    height: 120px;
+    max-height: 120px;
+    transition: background 0.18s;
+    display: table-row;
+}
+
+.mods-table tbody tr:hover {
+    background: #1e1f22;
+}
+
+.mods-table td {
+    color: #fff;
+    vertical-align: middle;
+    border: none;
+    font-size: 1em;
+}
+
+.mods-table input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    accent-color: #4d9cff;
+    margin: 0;
+}
+
+.mod-name-cell {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.mod-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 10px;
+    padding: 6px;
+    margin-right: 8px;
+}
+
+.mod-main-title {
+    font-weight: bold;
+    font-size: 1.08em;
+    color: #fff;
+    display: block;
+}
+
+.mod-file-name {
+    font-size: 0.95em;
+    color: #aaa;
+    display: block;
+}
+
+.download-mod-spore-btn {
+    background: #4d9cff;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 7px 28px;
+    cursor: pointer;
+    box-shadow: 0 2px 6px #222;
+    transition: background 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-size: 1em;
+    font-weight: 600;
+}
+
+.download-mod-spore-btn:hover {
+    background: #0f5cb9;
+    box-shadow: 0 4px 16px #0f5cb9;
+}
+
+.download-mod-spore-btn img {
+    width: 26px;
+    height: 26px;
+    margin: 0;
+    padding: 0;
+    display: block;
+}
+
+.uninstall-mod-spore-btn {
+    background: #ff5558 !important;
+    color: #fff !important;
+    border: none;
+    box-shadow: 0 2px 8px #ff4d4f44;
+}
+
+.uninstall-mod-spore-btn:hover {
+    background: #da2c34 !important;
+    box-shadow: 0 4px 16px #ff4d4f44 !important;
+}
+
+.download-mod-spore-btn,
+.uninstall-mod-spore-btn {
+    min-width: 160px;
+    text-align: center;
+    justify-content: center;
+}
+
+.launcher-logo-container {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+
+.launcher-logo {
+    width: 300px;
+    max-width: 90vw;
+    display: block;
+    margin: 0 auto;
+    -webkit-user-drag: none;
+}
+
+
+@keyframes modalFadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes modalContentIn {
+    from {
+        opacity: 0;
+        transform: translateY(40px) scale(0.98);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes modalFadeOut {
+    from {
+        opacity: 1;
+    }
+
+    to {
+        opacity: 0;
+    }
+}
+
+@keyframes modalContentOut {
+    from {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+
+    to {
+        opacity: 0;
+        transform: translateY(40px) scale(0.98);
+    }
+}
+
+.mods-modal.animating-in {
+    animation: modalFadeIn 0.25s forwards;
+}
+
+.mods-modal-content.animating-in {
+    animation: modalContentIn 0.35s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.mods-modal.animating-out {
+    animation: modalFadeOut 0.2s forwards;
+}
+
+.mods-modal-content.animating-out {
+    animation: modalContentOut 0.25s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.mods-modal.animating-in {
+    animation: none !important;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.transparent-launcher,
+.transparent-launcher * {
+    background: transparent !important;
+    box-shadow: none !important;
+    color: transparent !important;
+    border-color: transparent !important;
+}
+
+.transparent-launcher,
+.transparent-launcher body,
+.transparent-launcher html {
+    background: transparent !important;
+}
+
+body.transparent-launcher .launcher-sidebar,
+body.transparent-launcher .launcher-window,
+body.transparent-launcher .launcher-header,
+body.transparent-launcher .launcher-content,
+body.transparent-launcher .launcher-footer {
+    display: none !important;
+}
+
+body.transparent-launcher #splash-screen {
+    display: flex !important;
+}
+
+.mods-search-bar {
+    width: 100%;
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 0;
+    margin-top: 0;
+    width: auto;
+    flex-shrink: 0;
+}
+
+.mods-title-row {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 24px;
+    margin-bottom: 18px;
+    width: 100%;
+}
+
+#mods-search-input {
+    width: 260px;
+    margin-left: 0;
+    padding: 10px 16px;
+    border-radius: 8px;
+    border: none;
+    background: #181c20;
+    color: #fff;
+    font-size: 1em;
+    box-shadow: 0 2px 8px #0004;
+    outline: none;
+    transition: background 0.18s, box-shadow 0.18s;
+}
+
+#mods-search-input:focus {
+    background: #23272f;
+    box-shadow: 0 4px 16px #4d9cff44;
+}
+
+#mods-search-input,
+.mods-search-bar {
+    -webkit-app-region: no-drag;
+}
+
+
+.filters-buttons {
+    display: flex;
+    gap: 6px;
+    min-width: 0;
+    margin-right: 18px;
+    align-items: center;
+    border-radius: 4px;
+    -webkit-app-region: no-drag;
+}
+
+.filters-buttons:not(:last-child) {
+    border-right: 2px solid #31333a;
+    padding-right: 18px;
+}
+
+.filter-btn {
+    background: #23252b;
+    color: #e3e3e3;
+    border: none;
+    border-radius: 4px;
+    padding: 0 14px;
+    height: 40px;
+    flex: 1 1 0;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 17px;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+    position: relative;
+}
+
+.filter-btn img {
+    width: 25px;
+    height: 25px;
+    object-fit: contain;
+    filter: brightness(1.2);
+    pointer-events: none;
+}
+
+.filter-btn.active,
+.filter-btn:active,
+.filter-btn:focus {
+    background: #4d9cff;
+    color: #fff;
+    border-color: #4d9cff;
+}
+
+.filter-btn:hover:not(.active) {
+    background: #2d3037;
+}
+
+.badge-style {
+    background: #333333;
+    border-radius: 5px;
+    padding: 7px;
+}
+
+.disclaimer-text {
+    white-space: pre-line;
+    line-height: 1.6;
+    margin: 0 0 1em;
+    color: #aaa;
+    max-width: 600px;
+}
+
+.settings-disclaimer a {
+    color: #6aa9ff;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.settings-disclaimer a:hover {
+    text-decoration: underline;
+    color: #8ec1ff;
+}
+
+.settings-reset {
+    padding: 18px;
+    min-height: 80px;
+}
+
+.settings-extra-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    margin-top: 16px;
+    width: 60%;
+    background: #ff5558;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 7px 5px;
+    font-size: 1em;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.18s, box-shadow 0.18s;
+    box-shadow: 0 2px 8px #ff4d4f44;
+}
+
+.settings-extra-btn:hover {
+    background: #da2c34;
+    box-shadow: 0 4px 16px #ff4d4f44;
+}
+
+.settings-extra-btn-icon {
+    width: 20px;
+    height: 20px;
+    vertical-align: middle;
+}
+
+@media (max-width: 1900px) {
+
+    .mods-table thead tr th,
+    .mods-table tbody tr td {
+        font-size: 0.95em;
+        padding: 5px 15px;
+    }
+
+    .mod-name-cell {
+        gap: 8px;
+    }
+
+    .mod-icon {
+        width: 36px;
+        height: 36px;
+        padding: 2px;
+    }
+
+    .mods-table th:nth-child(1),
+    .mods-table td:nth-child(1) {
+        width: 12%;
+        white-space: normal;
+    }
+
+    .mods-table th:nth-child(2),
+    .mods-table td:nth-child(2) {
+        width: 10%;
+        white-space: normal;
+    }
+
+    .mods-table th:nth-child(3),
+    .mods-table td:nth-child(3) {
+        width: 7%;
+        white-space: normal;
+    }
+
+    .mods-table th:nth-child(4),
+    .mods-table td:nth-child(4) {
+        width: 20%;
+        white-space: normal;
+    }
+
+    .mods-table th:nth-child(5),
+    .mods-table td:nth-child(5) {
+        width: 10%;
+        white-space: normal;
+    }
+
+    .mods-table th:nth-child(6),
+    .mods-table td:nth-child(6) {
+        width: 9%;
+        white-space: normal;
+    }
+
+    .download-mod-spore-btn,
+    .uninstall-mod-spore-btn {
+        min-width: 120px;
+        max-width: 120px;
+        font-size: 0.9em;
+        text-align: center;
+        justify-content: center;
+    }
+
+    .mod-progress-bar {
+        position: relative;
+        height: 18px;
+        max-width: 120px;
+        border-radius: 6px;
+        background: #23272f;
+        overflow: hidden;
+    }
+
+    .download-mod-spore-btn {
+        padding: 7px 0px;
+    }
+}

@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:;">
+    <title data-i18n="title"></title>
+    <link rel="stylesheet" href="styles/app.css">
+</head>
+
+<body class="transparent-launcher">
+    <div id="splash-screen"
+        style="position:fixed;top:0;left:0;width:100vw;height:100vh;display:flex;align-items:center;justify-content:center;background:transparent;z-index:9999;">
+        <img src="assets/loading.png" class="splash-icon" draggable="false" alt="Cargando..."
+            style="width:120px;height:120px;animation:spin 1s linear infinite;">
+    </div>
+
+    <div class="launcher-sidebar">
+        <div class="sidebar-header">
+            <img src="assets/spore-next-emblem.png" alt="Spore Logo" class="logo" draggable="false">
+            <span class="launcher-title" data-i18n="launcherTitle"></span>
+        </div>
+
+        <div class="launcher-footer">
+            <div class="footer-items-group">
+                <div class="footer-item">
+                    <img src="assets/install.png" alt="Install Mods" draggable="false">
+                    <span data-i18n="modslist"></span>
+                </div>
+                <div class="footer-item" id="discord-btn">
+                    <img src="assets/discord.png" alt="Discord" draggable="false">
+                    <span data-i18n="discord"></span>
+                </div>
+                <div class="footer-item">
+                    <img src="assets/donate.png" alt="Kofi" draggable="false">
+                    <span data-i18n="donations"></span>
+                </div>
+            </div>
+            <div class="footer-item footer-settings">
+                <img src="assets/settings.png" alt="Settings" draggable="false">
+                <span data-i18n="settings"></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="launcher-window">
+        <img class="background-video" src="assets/background.gif" alt="Background" />
+        <div class="launcher-header">
+            <div class="window-controls">
+                <button class="window-minimize">—</button>
+                <button class="window-maximize">☐</button>
+                <button class="window-close">✖</button>
+            </div>
+        </div>
+
+        <div class="launcher-content">
+            <div class="launcher-logo-container">
+                <img src="assets/spore-next-logo.png" alt="Spore NEXT Logo" class="launcher-logo" draggable="false">
+            </div>
+            <p data-i18n="updatedText"></p>
+            <div class="launcher-buttons">
+                <button class="play-btn-spore"><img src="assets/spore.png" alt="Spore" draggable="false"
+                        data-i18n="sporeIcon"> <span data-i18n="startSpore"></span></button>
+            </div>
+            <button id="update-launcher-btn"><span data-i18n="updateLauncher"></span></button>
+        </div>
+
+        <div id="settings-modal" class="mods-modal hidden">
+            <div class="mods-modal-content settings-modal-content">
+                <div class="window-controls modal-window-controls">
+                    <button class="window-minimize">—</button>
+                    <button class="window-maximize">☐</button>
+                    <button class="window-close" id="close-settings-modal">✖</button>
+                </div>
+                <div class="mods-title-bar">
+                    <img src="assets/spore-next-emblem.png" alt="Mods" class="mods-title-icon" draggable="false">
+                    <span class="mods-title-text" data-i18n="settingsTitle"></span>
+                </div>
+
+                <div class="settings-lang-row settings-lang-row-flex">
+                    <div class="settings-lang-group">
+                        <label for="lang-select" class="settings-label">
+                            <img src="assets/language.png" alt="Idioma" class="settings-label-icon">
+                            <span data-i18n="language"></span>
+                        </label>
+                        <select id="lang-select" class="settings-lang-select">
+                            <option value="es" data-i18n="spanish"></option>
+                            <option value="en" data-i18n="english"></option>
+                        </select>
+                    </div>
+
+                    <div class="settings-reset" style="flex:1; margin-left:32px;">
+                        <label for="lang-select" class="settings-label">
+                            <img src="assets/reset.png" alt="Reset" class="settings-label-icon">
+                            <span data-i18n="reset"></span>
+                        </label>
+                        <button id="extra-action-btn" class="settings-extra-btn">
+                            <img src="assets/spore-uninstall.png" alt="Extra" class="settings-extra-btn-icon">
+                            <span data-i18n="reset-uninstall"></span>
+                        </button>
+                    </div>
+
+                </div>
+
+                <div class="settings-disclaimer" style="margin-top:32px;">
+                    <div style="display:flex;align-items:center;gap:4px;">
+                        <img src="assets/disclaimer.png" alt="Disclaimer" class="settings-label-icon"
+                            style="width:18px;height:18px;">
+                        <h3 style="color:#fff" data-i18n="disclaimerTitle"></h3>
+                    </div>
+                    <p class="disclaimer-text" data-i18n="disclaimerText"></p>
+                </div>
+
+            </div>
+        </div>
+
+        <div id="mods-modal" class="mods-modal hidden">
+            <div class="mods-modal-content">
+                <div class="window-controls modal-window-controls">
+                    <button class="window-minimize">—</button>
+                    <button class="window-maximize">☐</button>
+                    <button class="window-close" id="close-mods-modal">✖</button>
+                </div>
+
+                <div class="mods-title-row">
+                    <div class="mods-title-bar">
+                        <img src="assets/spore-next-emblem.png" alt="Mods" class="mods-title-icon" draggable="false">
+                        <span class="mods-title-text" data-i18n="modsTitle"></span>
+                    </div>
+                    <div class="mods-search-bar">
+                        <input type="text" id="mods-search-input" placeholder="Buscar mods..." autocomplete="off">
+                    </div>
+
+                    <div class="filters-buttons">
+                        <button class="filter-btn" id="filter-all" title="All">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                                class="bi bi-asterisk" viewBox="0 0 16 16">
+                                <path
+                                    d="M8 0a1 1 0 0 1 1 1v5.268l4.562-2.634a1 1 0 1 1 1 1.732L10 8l4.562 2.634a1 1 0 1 1-1 1.732L9 9.732V15a1 1 0 1 1-2 0V9.732l-4.562 2.634a1 1 0 1 1-1-1.732L6 8 1.438 5.366a1 1 0 0 1 1-1.732L7 6.268V1a1 1 0 0 1 1-1" />
+                            </svg>
+                        </button>
+                        <button class="filter-btn" id="filter-optimization" title="Optimization">
+                            <img src="assets/optimization.png" alt="Optimization" />
+                        </button>
+                        <button class="filter-btn" id="filter-textures" title="Textures">
+                            <img src="assets/textures.png" alt="Textures" />
+                        </button>
+                        <button class="filter-btn" id="filter-overhaul" title="Overhaul">
+                            <img src="assets/overhaul.png" alt="Overhaul" />
+                        </button>
+                    </div>
+
+                </div>
+                <div class="mods-table-container">
+                    <table class="mods-table">
+                        <thead>
+                            <tr>
+                                <th data-i18n="modName">Name</th>
+                                <th data-i18n="modAction">Action</th>
+                                <th data-i18n="modSize">Size</th>
+                                <th data-i18n="modDescription">Description</th>
+                                <th data-i18n="modAuthor">Author</th>
+                                <th data-i18n="modCategory">Category</th>
+                            </tr>
+                        </thead>
+
+
+                        <tbody>
+                            <tr data-category="optimization">
+                                <td>
+                                    <div class="mod-name-cell">
+                                        <img src="assets/mod-4gbpatch.png" alt="Mod 4gb patch" class="mod-icon"
+                                            draggable="false">
+                                        <div>
+                                            <span class="mod-main-title" data-i18n="mod4gbpatchTitle"></span>
+                                            <span class="mod-file-name" data-i18n="mod4gbpatchFile"></span>
+                                        </div>
+                                    </div>
+                                </td>
+
+                                <td>
+                                    <div class="mod-action-container">
+                                        <button class="download-mod-spore-btn" data-mod-id="4gbpatch"
+                                            data-mod-url="https://pub-f564be9e0d7346339919d7f640464d71.r2.dev/4GBPatch.zip">
+                                            <img src="assets/spore.png" alt="Spore"
+                                                style="width:20px;height:20px;vertical-align:middle;" draggable="false">
+                                            <span data-i18n="download"></span>
+                                        </button>
+                                        <div class="mod-progress-bar" style="display:none;">
+                                            <div class="progress-bar-fill"
+                                                style="width:0%;background:#4d9cff;height:18px;border-radius:6px;">
+                                            </div>
+                                        </div>
+                                        <span class="progress-bar-text"
+                                            style="color:#fff;font-size:0.95em;display:block;margin-top:4px;"></span>
+                                    </div>
+                </div>
+                </td>
+                <td><span class="badge-style" data-i18n="mod4gbpatchSize"></span></td>
+                <td><span data-i18n="mod4gbpatchDescription"></span></td>
+                <td><span data-i18n="mod4gbpatchAuthor"></span></td>
+                <td><span class="badge-style" data-i18n="modCategoryOptimization"></span></td>
+                </tr>
+                </tbody>
+
+                <tbody>
+                    <tr data-category="optimization">
+                        <td>
+                            <div class="mod-name-cell">
+                                <img src="assets/mod-60fps.png" alt="Mod 60fps" class="mod-icon" draggable="false">
+                                <div>
+                                    <span class="mod-main-title" data-i18n="mod60fpsTitle"></span>
+                                    <span class="mod-file-name" data-i18n="mod60fpsFile"></span>
+                                </div>
+                            </div>
+                        </td>
+
+                        <td>
+                            <div class="mod-action-container">
+                                <button class="download-mod-spore-btn" data-mod-id="unlock60fps"
+                                    data-mod-url="https://pub-f564be9e0d7346339919d7f640464d71.r2.dev/Unlock60fps.zip">
+                                    <img src="assets/spore.png" alt="Spore"
+                                        style="width:20px;height:20px;vertical-align:middle;" draggable="false">
+                                    <span data-i18n="download"></span>
+                                </button>
+                                <div class="mod-progress-bar" style="display:none;">
+                                    <div class="progress-bar-fill"
+                                        style="width:0%;background:#4d9cff;height:18px;border-radius:6px;">
+                                    </div>
+                                </div>
+                                <span class="progress-bar-text"
+                                    style="color:#fff;font-size:0.95em;display:block;margin-top:4px;"></span>
+                            </div>
+            </div>
+            </td>
+            <td><span class="badge-style" data-i18n="mod60fpsSize"></span></td>
+            <td><span data-i18n="mod60fpsDescription"></span></td>
+            <td><span data-i18n="mod60fpsAuthor"></span></td>
+            <td><span class="badge-style" data-i18n="modCategoryOptimization"></span></td>
+            </tr>
+            </tbody>
+
+            <tr data-category="textures">
+                <td>
+                    <div class="mod-name-cell">
+                        <img src="assets/mod-hd.png" alt="Mod HD Textures" class="mod-icon" draggable="false">
+                        <div>
+                            <span class="mod-main-title" data-i18n="modHDTitle"></span>
+                            <span class="mod-file-name" data-i18n="modHDFile"></span>
+                        </div>
+                    </div>
+                </td>
+                <td>
+                    <div class="mod-action-container">
+                        <button class="download-mod-spore-btn" data-mod-id="HDTextures"
+                            data-mod-url="https://pub-f564be9e0d7346339919d7f640464d71.r2.dev/HDTextures.zip">
+                            <img src="assets/spore.png" alt="Spore"
+                                style="width:20px;height:20px;vertical-align:middle;" draggable="false">
+                            <span data-i18n="download"></span>
+                        </button>
+                        <div class="mod-progress-bar" style="display:none;">
+                            <div class="progress-bar-fill"
+                                style="width:0%;background:#4d9cff;height:18px;border-radius:6px;">
+                            </div>
+                        </div>
+                        <span class="progress-bar-text"
+                            style="color:#fff;font-size:0.95em;display:block;margin-top:4px;"></span>
+                    </div>
+        </div>
+        </td>
+        <td><span class="badge-style" data-i18n="modHDSize"></span></td>
+        <td><span data-i18n="modHDDescription"></span></td>
+        <td><span data-i18n="modHDAuthor"></span></td>
+        <td><span class="badge-style" data-i18n="modCategoryTextures"></span></td>
+        </tr>
+        </tbody>
+
+
+        </table>
+    </div>
+    </div>
+    <script src="renderer.js"></script>
+    </div>
+    </div>
+</body>
+
+</html>

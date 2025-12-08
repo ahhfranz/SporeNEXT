@@ -1,0 +1,60 @@
+{
+  "name": "spore-next",
+  "version": "1.0.0",
+  "main": "src/main/main.js",
+  "type": "module",
+  "scripts": {
+    "start": "electron src/main/main.js",
+    "dev": "electron .",
+    "dist": "electron-builder"
+  },
+  "devDependencies": {
+    "electron": "^37.2.3",
+    "electron-builder": "^26.0.12"
+  },
+  "dependencies": {
+    "adm-zip": "^0.5.16",
+    "electron-updater": "^6.6.2",
+    "node-fetch": "^3.3.2",
+    "winreg": "^1.2.5"
+  },
+  "build": {
+    "appId": "com.spore.next",
+    "productName": "Spore NEXT",
+    "asar": true,
+    "files": [
+      "public/**/*",
+      "src/**/*",
+      "Mods/**/*",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "Spore ModAPI Launcher Kit",
+        "to": "Spore ModAPI Launcher Kit"
+      }
+    ],
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "ahhfranz",
+        "repo": "SporeNEXT"
+      }
+    ],
+    "directories": {
+      "buildResources": "public/assets"
+    },
+    "win": {
+      "target": "nsis",
+      "icon": "public/assets/spore-logo.png",
+      "artifactName": "Spore-NEXT-Setup-${version}.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    },
+    "electronLanguages": [
+      "en-US"
+    ]
+  }
+}
