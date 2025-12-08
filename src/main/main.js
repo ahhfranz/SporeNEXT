@@ -2,26 +2,26 @@ import { app, BrowserWindow, ipcMain, shell, dialog } from 'electron';
 import { fileURLToPath } from 'url';
 import path from 'path';
 import fs from 'fs';
-import { fork } from 'child_process';
 import pkg from 'electron-updater';
-import http from 'http';
+import fetch from 'node-fetch';
+import AdmZip from 'adm-zip';
+import crypto from 'crypto';
+import WinReg from 'winreg';
+import https from 'https';
+import { fork, spawn } from 'child_process';
 
+app.disableHardwareAcceleration();
 app.setName('Spore NEXT');
 
 const { autoUpdater } = pkg;
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const MOD_ZIP_URL = 'http://69.62.98.110/mods/mod.zip';
 
-let userSporePath = '', userGAPath = '', mainWindow = null;
+let mainWindow = null;
 let isInstalling = false;
 
 let currentLang = 'en';
 let translations = {};
-
-const programFilesX86 = process.env['ProgramFiles(x86)'] || 'C:\\Program Files (x86)';
-const programFiles = process.env['ProgramFiles'] || 'C:\\Program Files';
-const userProfile = process.env['USERPROFILE'] || 'C:\\Users\\Default';
 
 function loadTranslations(lang) {
     const localePath = path.join(__dirname, '../../public/locales', lang + '.json');
@@ -37,143 +37,66 @@ ipcMain.handle('set-language', (_e, lang) => {
 });
 loadTranslations(currentLang);
 
-function downloadModZip(url, destPath, onProgress) {
-    return new Promise((resolve, reject) => {
-        http.get(url, { headers: { 'User-Agent': 'Mozilla/5.0' } }, (response) => {
-            if (response.statusCode !== 200) {
-                console.error('HTTP status:', response.statusCode, 'URL:', url);
-                return reject(new Error('Failed to download mod.zip'));
-            }
-            const total = parseInt(response.headers['content-length'], 10);
-            let downloaded = 0;
-            const file = fs.createWriteStream(destPath);
-            response.on('data', chunk => {
-                downloaded += chunk.length;
-                if (total && onProgress) onProgress(Math.round((downloaded / total) * 50));
-            });
-            response.pipe(file);
-            file.on('finish', () => file.close(() => resolve(true)));
-        }).on('error', err => {
-            console.error('Download error:', err);
-            fs.unlink(destPath, () => reject(err));
-        });
-    });
-}
-
-function detectSporeBasePath() {
-    const bases = [
-        path.join(programFilesX86, 'Steam', 'steamapps', 'common', 'spore'),
-        path.join(programFiles, 'Steam', 'steamapps', 'common', 'spore'),
-        'C:\\steam\\steamapps\\common\\Spore',
-        'D:\\SteamLibrary\\steamapps\\common\\spore',
-        'E:\\SteamLibrary\\steamapps\\common\\spore',
-        'D:\\steam\\steamapps\\common\\Spore',
-        'E:\\steam\\steamapps\\common\\Spore',
-        path.join(programFiles, 'EA Games', 'Spore'),
-        path.join(programFilesX86, 'EA Games', 'Spore'),
-        'C:\\Spore',
-        'D:\\Spore',
-        'E:\\Spore'
-    ];
-    return bases.find(base => fs.existsSync(base)) || '';
-}
-
-function detectSporeDataPath() {
-    const base = detectSporeBasePath();
-    const paths = [
-        path.join(programFilesX86, 'Steam', 'steamapps', 'common', 'spore', 'Data'),
-        path.join(programFiles, 'Steam', 'steamapps', 'common', 'spore', 'Data'),
-        'C:\\steam\\steamapps\\common\\Spore\\Data',
-        'D:\\SteamLibrary\\steamapps\\common\\spore\\Data',
-        'E:\\SteamLibrary\\steamapps\\common\\spore\\Data',
-        'D:\\steam\\steamapps\\common\\Spore\\Data',
-        'E:\\steam\\steamapps\\common\\Spore\\Data',
-        base ? path.join(base, 'Data') : '',
-        path.join(programFiles, 'EA Games', 'Spore', 'Data'),
-        path.join(programFilesX86, 'EA Games', 'Spore', 'Data'),
-        'C:\\Spore\\Data',
-        'D:\\Spore\\Data',
-        'E:\\Spore\\Data'
-    ];
-    return paths.find(p => fs.existsSync(p)) || '';
-}
-
-function detectGADataPath() {
-    const base = detectSporeBasePath();
-    const paths = [
-        path.join(programFilesX86, 'Steam', 'steamapps', 'common', 'spore', 'DataEP1'),
-        path.join(programFiles, 'Steam', 'steamapps', 'common', 'spore', 'DataEP1'),
-        'C:\\steam\\steamapps\\common\\Spore\\DataEP1',
-        'D:\\SteamLibrary\\steamapps\\common\\spore\\DataEP1',
-        'E:\\SteamLibrary\\steamapps\\common\\spore\\DataEP1',
-        'D:\\steam\\steamapps\\common\\Spore\\DataEP1',
-        'E:\\steam\\steamapps\\common\\Spore\\DataEP1',
-        base ? path.join(base, 'DataEP1') : '',
-        path.join(programFiles, 'EA Games', 'Spore', 'SPORE Galactic Adventures', 'Data'),
-        path.join(programFilesX86, 'EA Games', 'Spore', 'SPORE Galactic Adventures', 'Data'),
-        'D:\\Spore\\SPORE Galactic Adventures\\Data',
-        'E:\\Spore\\SPORE Galactic Adventures\\Data'
-    ];
-    return paths.find(p => fs.existsSync(p)) || '';
-}
-
-function detectSporeExe() {
-    const base = detectSporeBasePath();
-    const exes = [
-        base ? path.join(base, 'SporeBin', 'SporeApp.exe') : '',
-        'C:\\steam\\steamapps\\common\\Spore\\Sporebin\\SporeApp.exe',
-        'D:\\steam\\steamapps\\common\\Spore\\Sporebin\\SporeApp.exe',
-        'E:\\steam\\steamapps\\common\\Spore\\Sporebin\\SporeApp.exe'
-    ];
-    return exes.find(exe => exe && fs.existsSync(exe)) || '';
-}
-
-function detectGAExe() {
-    const base = detectSporeBasePath();
-    const exes = [
-        base ? path.join(base, 'SporebinEP1', 'SporeApp.exe') : '',
-        path.join(programFiles, 'EA Games', 'Spore', 'SPORE Galactic Adventures', 'SporebinEP1', 'SporeApp.exe'),
-        path.join(programFilesX86, 'EA Games', 'Spore', 'SPORE Galactic Adventures', 'SporebinEP1', 'SporeApp.exe'),
-        'C:\\steam\\steamapps\\common\\Spore\\SporebinEP1\\SporeApp.exe',
-        'D:\\Spore\\SPORE Galactic Adventures\\SporebinEP1\\SporeApp.exe',
-        'E:\\Spore\\SPORE Galactic Adventures\\SporebinEP1\\SporeApp.exe',
-        'D:\\steam\\steamapps\\common\\Spore\\SporebinEP1\\SporeApp.exe',
-        'E:\\steam\\steamapps\\common\\Spore\\SporebinEP1\\SporeApp.exe'
-    ];
-    return exes.find(exe => exe && fs.existsSync(exe)) || '';
-}
-
 function createWindow() {
     mainWindow = new BrowserWindow({
-        width: 1200, height: 800, frame: false, resizable: false, maximizable: false,
+        width: 1360,
+        height: 768,
+        minWidth: 1360,
+        minHeight: 768,
+        frame: false,
+        resizable: false,
+        maximizable: true,
         icon: path.join(__dirname, '../../public/assets/spore.png'),
         webPreferences: {
             preload: path.join(__dirname, '../../src/main/preload.js'),
-            contextIsolation: true, nodeIntegration: false
+            contextIsolation: true,
+            nodeIntegration: false
         },
-        backgroundColor: '#222222'
+        transparent: true,
+        backgroundColor: '#00000000',
     });
     mainWindow.loadFile(path.join(__dirname, '../../public/index.html'));
 
-    if (!app.isPackaged) {
-        mainWindow.webContents.openDevTools({ mode: 'detach' });
-    } else {
-        mainWindow.webContents.on('before-input-event', (event, input) => {
-            if (
+    mainWindow.webContents.on('did-finish-load', () => {
+    });
+
+    mainWindow.webContents.on('before-input-event', (event, input) => {
+        if (input.key === 'F11') {
+            event.preventDefault();
+            return;
+        }
+        if (
+            app.isPackaged &&
+            (
                 input.key === 'F12' ||
                 (input.control && input.shift && input.key.toLowerCase() === 'i')
-            ) {
-                event.preventDefault();
-            }
-        });
-        mainWindow.webContents.on('devtools-opened', () => {
-            mainWindow.webContents.closeDevTools();
-        });
-    }
+            )
+        ) {
+            event.preventDefault();
+        }
+    });
 
-    mainWindow.on('maximize', e => { e.preventDefault(); mainWindow.unmaximize(); });
     mainWindow.on('closed', () => { mainWindow = null; });
-    mainWindow.on('close', (e) => { /* ... */ });
+    mainWindow.on('maximize', () => {
+        mainWindow.setResizable(false);
+        mainWindow.webContents.send('window-maximize-changed', true);
+    });
+    mainWindow.on('unmaximize', () => {
+        mainWindow.setResizable(false);
+        mainWindow.webContents.send('window-maximize-changed', false);
+    });
+    mainWindow.on('enter-full-screen', () => {
+        mainWindow.setResizable(false);
+    });
+    mainWindow.on('leave-full-screen', () => {
+        mainWindow.setResizable(false);
+    });
+    mainWindow.on('focus', () => {
+        mainWindow.webContents.send('window-focused');
+    });
+    mainWindow.on('restore', () => {
+        mainWindow.webContents.send('window-focused');
+    });
 }
 
 app.on('ready', () => {
@@ -190,10 +113,16 @@ app.on('ready', () => {
 app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(); });
 app.on('activate', () => { if (!mainWindow) createWindow(); });
 
-ipcMain.handle('set-spore-path', (_e, v) => { if (typeof v === 'string') userSporePath = path.normalize(v).replace(/[\\\/]+$/, ''); });
-ipcMain.handle('set-ga-path', (_e, v) => { if (typeof v === 'string') userGAPath = path.normalize(v).replace(/[\\\/]+$/, ''); });
-
 ipcMain.handle('close-window', () => mainWindow?.close());
+ipcMain.handle('maximize-window', () => {
+    if (mainWindow) {
+        if (mainWindow.isMaximized()) {
+            mainWindow.unmaximize();
+        } else {
+            mainWindow.maximize();
+        }
+    }
+});
 ipcMain.handle('minimize-window', () => mainWindow?.minimize());
 ipcMain.handle('open-mods-folder', () => {
     const modsPath = path.join(app.getPath('userData'), 'mods');
@@ -201,6 +130,8 @@ ipcMain.handle('open-mods-folder', () => {
     shell.openPath(modsPath);
 });
 ipcMain.handle('open-discord', () => shell.openExternal('https://discord.gg/JqZyyugs5a'));
+ipcMain.handle('open-kofi', () => shell.openExternal('https://ko-fi.com/franzlabs'));
+ipcMain.handle('open-external', (_e, url) => shell.openExternal(url));
 
 ipcMain.handle('set-installing', (_e, installing) => { isInstalling = !!installing; });
 
@@ -211,111 +142,6 @@ ipcMain.handle('download-update', async () => {
     } catch {
         return false;
     }
-});
-
-ipcMain.handle('install-mod', async (event, modFile, target) => {
-    const destPath = target === 'ga' ? (userGAPath || detectGADataPath()) : (userSporePath || detectSporeDataPath());
-    if (!destPath || !fs.existsSync(destPath)) {
-        console.error('Invalid destPath:', destPath);
-        return false;
-    }
-    const configDir = path.join(destPath, 'Config');
-    const modsDir = path.join(app.getPath('userData'), 'mods');
-    const modSource = path.join(modsDir, modFile);
-
-    if (!fs.existsSync(modsDir)) {
-        fs.mkdirSync(modsDir, { recursive: true });
-    }
-
-    if (fs.existsSync(modSource)) {
-        try { fs.unlinkSync(modSource); } catch { }
-    }
-
-    try {
-        await downloadModZip(MOD_ZIP_URL, modSource, p => {
-            if (mainWindow && !mainWindow.isDestroyed()) {
-                event.sender.send('mod-install-progress', p);
-            }
-        });
-    } catch {
-        console.error('Download failed');
-        return false;
-    }
-
-    if (!fs.existsSync(modSource)) {
-        console.error('modSource does not exist after download:', modSource);
-        return false;
-    }
-
-    const workerPath = path.join(__dirname, 'installWorker.js');
-    const installResult = await new Promise(resolve => {
-        const child = fork(workerPath, [modSource, destPath, configDir], { stdio: ['pipe', 'pipe', 'pipe', 'ipc'] });
-        child.on('message', msg => {
-            if (msg.progress !== undefined && mainWindow && !mainWindow.isDestroyed()) {
-                event.sender.send('mod-install-progress', 50 + Math.round(msg.progress / 2));
-            }
-            if (msg.success !== undefined) { resolve(msg.success); child.kill(); }
-        });
-        child.on('error', () => { resolve(false); child.kill(); });
-        child.on('exit', () => { });
-    });
-    if (installResult && fs.existsSync(modSource)) { try { fs.unlinkSync(modSource); } catch { } }
-    return installResult;
-});
-
-ipcMain.handle('detect-spore-path', () => detectSporeDataPath());
-ipcMain.handle('detect-ga-path', () => detectGADataPath());
-ipcMain.handle('browse-folder', async () => {
-    const result = await dialog.showOpenDialog({ properties: ['openDirectory'] });
-    return result.canceled || result.filePaths.length === 0 ? '' : result.filePaths[0];
-});
-
-ipcMain.handle('check-spore-path', (_e, folderPath, type) => {
-    if (!folderPath) return false;
-    const normalized = path.normalize(folderPath).replace(/[\\\/]+$/, '');
-    const baseName = path.basename(normalized).toLowerCase();
-
-    if (type === 'spore') {
-        return fs.existsSync(normalized) && baseName === 'data';
-    }
-    if (type === 'ga') {
-        return fs.existsSync(normalized) && baseName === 'dataep1';
-    }
-    return false;
-});
-
-ipcMain.handle('launch-spore', () => {
-    const steamPaths = [
-        path.join(programFilesX86, 'Steam', 'steamapps', 'common', 'spore'),
-        path.join(programFiles, 'Steam', 'steamapps', 'common', 'spore'),
-        'D:\\SteamLibrary\\steamapps\\common\\spore'
-    ];
-    const exePath = detectSporeExe();
-    if (steamPaths.some(p => fs.existsSync(p))) {
-        shell.openExternal('steam://run/17390');
-        return true;
-    } else if (exePath && fs.existsSync(exePath)) {
-        shell.openPath(exePath);
-        return true;
-    }
-    return false;
-});
-
-ipcMain.handle('launch-ga', () => {
-    const steamPaths = [
-        path.join(programFilesX86, 'Steam', 'steamapps', 'common', 'spore'),
-        path.join(programFiles, 'Steam', 'steamapps', 'common', 'spore'),
-        'D:\\SteamLibrary\\steamapps\\common\\spore'
-    ];
-    const exePath = detectGAExe();
-    if (steamPaths.some(p => fs.existsSync(p))) {
-        shell.openExternal('steam://run/24720');
-        return true;
-    } else if (exePath && fs.existsSync(exePath)) {
-        shell.openPath(exePath);
-        return true;
-    }
-    return false;
 });
 
 ipcMain.handle('get-app-version', () => {
@@ -340,50 +166,634 @@ ipcMain.handle('show-confirm', async (_e, options) => {
     return result.response === 0;
 });
 
-ipcMain.handle('is-mod-installed', async (_e, target) => {
-    const destPath = target === 'ga' ? (userGAPath || detectGADataPath()) : (userSporePath || detectSporeDataPath());
-    if (!destPath || !fs.existsSync(destPath)) return false;
-    const files = [
-        'HD_Decals.package',
-        'HD_Editor-background.package',
-        'HD_Empire-backgrounds.package',
-        'HD_Galaxy.package',
-        'HD_Water.package'
+ipcMain.handle('download-mod-with-progress', async (_event, url) => {
+    try {
+        const urlObj = new URL(url);
+        let fileId = urlObj.searchParams.get('id');
+        if (!fileId) {
+            fileId = path.basename(urlObj.pathname, '.zip');
+        }
+        const tempPath = path.join(app.getPath('temp'), `${fileId}.zip`);
+        const agent = new https.Agent({ rejectUnauthorized: false });
+        const res = await fetch(url, {
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) SporeNEXTLauncher'
+            },
+            agent
+        });
+        if (!res.ok) throw new Error('No se pudo descargar el mod: ' + res.status + ' ' + res.statusText);
+
+        const total = Number(res.headers.get('content-length')) || 0;
+        let downloaded = 0;
+        const fileStream = fs.createWriteStream(tempPath);
+
+        const modId = fileId;
+
+        return await new Promise((resolve, reject) => {
+            res.body.on('data', (chunk) => {
+                downloaded += chunk.length;
+                if (mainWindow && total) {
+                    mainWindow.webContents.send('mod-download-progress', {
+                        modId,
+                        downloaded,
+                        total,
+                        percent: Math.round((downloaded / total) * 100)
+                    });
+                }
+            });
+            res.body.pipe(fileStream);
+            fileStream.on('finish', () => {
+                if (mainWindow && total) {
+                    mainWindow.webContents.send('mod-download-progress', {
+                        modId,
+                        downloaded: total,
+                        total,
+                        percent: 100
+                    });
+                }
+                resolve(tempPath);
+            });
+            fileStream.on('error', (err) => {
+                reject(err);
+            });
+        });
+    } catch (err) {
+        if (mainWindow) {
+            mainWindow.webContents.send('download-mod-error', err.message || String(err));
+        }
+        throw err;
+    }
+});
+
+
+function findAllPackages(dir) {
+    let results = [];
+    const list = fs.readdirSync(dir);
+    for (const file of list) {
+        const filePath = path.join(dir, file);
+        const stat = fs.statSync(filePath);
+        if (stat && stat.isDirectory()) {
+            results = results.concat(findAllPackages(filePath));
+        } else if (file.toLowerCase().endsWith('.package')) {
+            results.push(filePath);
+        }
+    }
+    return results;
+}
+
+
+ipcMain.handle('install-hdtextures', async (_e, extractedPath, zipPath) => {
+    let configDir = await findSporeConfigDir();
+    if (!configDir) throw new Error('No se pudo encontrar la carpeta de configuración de Spore.');
+
+
+    let configDirNormalized = configDir.replace(/\\/g, '/').replace(/\/+$/, '').toLowerCase();
+    let dataEP1;
+    if (configDirNormalized.endsWith('/dataep1')) {
+        dataEP1 = configDir;
+    } else if (configDirNormalized.endsWith('/config')) {
+        dataEP1 = path.dirname(configDir);
+    } else {
+        const candidate = path.join(configDir, 'DataEP1');
+        if (fs.existsSync(candidate)) {
+            dataEP1 = candidate;
+        } else {
+            throw new Error('No se pudo encontrar la carpeta DataEP1.');
+        }
+    }
+
+    if (!fs.existsSync(dataEP1)) fs.mkdirSync(dataEP1, { recursive: true });
+
+
+    const files = findAllPackages(extractedPath);
+    const total = files.length;
+    let copied = 0;
+
+    for (const src of files) {
+        const dest = path.join(dataEP1, path.basename(src));
+        fs.copyFileSync(src, dest);
+        copied++;
+        if (mainWindow) {
+            mainWindow.webContents.send('mod-install-progress', {
+                modId: 'HDTextures',
+                copied,
+                total,
+                percent: Math.round((copied / total) * 100)
+            });
+        }
+    }
+
+    try {
+        if (zipPath && fs.existsSync(zipPath)) fs.unlinkSync(zipPath);
+        if (extractedPath && fs.existsSync(extractedPath)) fs.rmSync(extractedPath, { recursive: true, force: true });
+    } catch (e) { }
+
+    return true;
+});
+
+ipcMain.handle('unzip-mod', async (_e, zipPath) => {
+    const extractPath = zipPath.replace(/\.zip$/i, '');
+    return await new Promise((resolve, reject) => {
+        const child = fork(path.join(__dirname, 'unzip-child.js'), [zipPath, extractPath], { stdio: ['inherit', 'inherit', 'inherit', 'ipc'] });
+        child.on('message', (msg) => {
+            if (msg.success) {
+                resolve(extractPath);
+            } else {
+                reject(new Error(msg.error || 'Error al descomprimir'));
+            }
+        });
+        child.on('error', (err) => reject(err));
+        child.on('exit', (code) => {
+            if (code !== 0) reject(new Error('Error al descomprimir (exit code ' + code + ')'));
+        });
+    });
+});
+
+async function findSporeExe() {
+    const WinReg = (await import('winreg')).default;
+    const regKeys = [
+        { hive: WinReg.HKLM, key: '\\SOFTWARE\\Wow6432Node\\Electronic Arts\\SPORE_EP1' },
+        { hive: WinReg.HKLM, key: '\\SOFTWARE\\Electronic Arts\\SPORE_EP1' }
     ];
-    return files.every(f => fs.existsSync(path.join(destPath, f)));
+    for (const reg of regKeys) {
+        try {
+            const regKey = new WinReg({ hive: reg.hive, key: reg.key });
+            const datadir = await new Promise(resolve => {
+                regKey.get('datadir', (err, item) => {
+                    if (!err && item && item.value) resolve(item.value.replace(/"/g, ''));
+                    else resolve(null);
+                });
+            });
+            if (datadir) {
+                const baseDir = datadir.replace(/\\DataEP1\\?$/i, '');
+                const exePath = path.join(baseDir, 'SporebinEP1', 'SporeApp.exe');
+                if (fs.existsSync(exePath)) return exePath;
+            }
+        } catch { }
+    }
+    return null;
+}
+
+ipcMain.handle('launch-spore', async () => {
+    const exePath = await findSporeExe();
+    if (!exePath) return false;
+    try {
+        spawn(exePath, [], { detached: true, stdio: 'ignore' }).unref();
+        return true;
+    } catch (e) {
+        return false;
+    }
+});
+
+async function findSporeConfigDir() {
+    const regKeys = [
+        { hive: WinReg.HKLM, key: '\\SOFTWARE\\Wow6432Node\\Electronic Arts\\SPORE_EP1' },
+        { hive: WinReg.HKLM, key: '\\SOFTWARE\\Electronic Arts\\SPORE_EP1' }
+    ];
+    for (const reg of regKeys) {
+        try {
+            const regKey = new WinReg({
+                hive: reg.hive,
+                key: reg.key
+            });
+            const getVal = (name) => new Promise((resolve) => {
+                regKey.get(name, (err, item) => {
+                    if (err || !item) return resolve(null);
+                    resolve(item.value.replace(/"/g, ''));
+                });
+            });
+            const values = await Promise.all([getVal('datadir'), getVal('InstallLoc'), getVal('Install Dir')]);
+            const [datadir, installLoc, installDir] = values;
+            if (datadir && fs.existsSync(datadir)) {
+                return datadir;
+            }
+            const basePath = installLoc || installDir;
+            if (basePath) {
+                const configPath = path.join(basePath, 'DataEP1', 'Config');
+                if (fs.existsSync(configPath)) {
+                    return configPath;
+                }
+            }
+        } catch (e) {
+        }
+    }
+    return null;
+}
+
+
+function fileHash(filePath) {
+    const data = fs.readFileSync(filePath);
+    return crypto.createHash('sha256').update(data).digest('hex');
+}
+
+
+ipcMain.handle('install-4gbpatch', async (_e, extractedPath, zipPath) => {
+    const regKeys = [
+        { hive: WinReg.HKLM, key: '\\SOFTWARE\\Wow6432Node\\Electronic Arts\\SPORE_EP1' },
+        { hive: WinReg.HKLM, key: '\\SOFTWARE\\Electronic Arts\\SPORE_EP1' }
+    ];
+    let installDir = null;
+    for (const reg of regKeys) {
+        try {
+            const regKey = new WinReg({ hive: reg.hive, key: reg.key });
+            installDir = await new Promise(resolve => {
+                regKey.get('datadir', (err, item) => {
+                    if (!err && item && fs.existsSync(path.dirname(item.value))) {
+                        return resolve(path.dirname(item.value));
+                    }
+                    regKey.get('Install Dir', (err2, item2) => {
+                        if (!err2 && item2 && fs.existsSync(item2.value)) {
+                            return resolve(item2.value.replace(/"/g, ''));
+                        }
+                        resolve(null);
+                    });
+                });
+            });
+            if (installDir && fs.existsSync(installDir)) break;
+        } catch { }
+    }
+    if (!installDir) throw new Error('No se pudo encontrar la carpeta de instalación de Spore.');
+
+    const sporebinEP1 = path.join(installDir, 'SporebinEP1');
+    if (!fs.existsSync(sporebinEP1)) throw new Error('No se encontró la carpeta SporebinEP1.');
+
+    const originalExe = path.join(sporebinEP1, 'SporeApp.exe');
+    const backupExe = path.join(sporebinEP1, 'SporeApp-backup.exe');
+
+    if (fs.existsSync(originalExe) && !fs.existsSync(backupExe)) {
+        fs.copyFileSync(originalExe, backupExe);
+    }
+
+    const patchExe = fs.readdirSync(extractedPath).find(f => f.toLowerCase() === 'sporeapp.exe');
+    if (!patchExe) throw new Error('No se encontró SporeApp.exe en el parche.');
+    const patchExePath = path.join(extractedPath, patchExe);
+
+    fs.copyFileSync(patchExePath, originalExe);
+
+    if (mainWindow) {
+        mainWindow.webContents.send('mod-install-progress', {
+            modId: '4gbpatch',
+            copied: 1,
+            total: 1,
+            percent: 100
+        });
+    }
+
+    try {
+        if (zipPath && fs.existsSync(zipPath)) fs.unlinkSync(zipPath);
+        if (extractedPath && fs.existsSync(extractedPath)) fs.rmSync(extractedPath, { recursive: true, force: true });
+    } catch { }
+
+    return true;
+});
+
+
+ipcMain.handle('uninstall-4gbpatch', async () => {
+    const regKeys = [
+        { hive: WinReg.HKLM, key: '\\SOFTWARE\\Wow6432Node\\Electronic Arts\\SPORE_EP1' },
+        { hive: WinReg.HKLM, key: '\\SOFTWARE\\Electronic Arts\\SPORE_EP1' }
+    ];
+    let installDir = null;
+    for (const reg of regKeys) {
+        try {
+            const regKey = new WinReg({ hive: reg.hive, key: reg.key });
+            installDir = await new Promise(resolve => {
+                regKey.get('datadir', (err, item) => {
+                    if (!err && item && fs.existsSync(path.dirname(item.value))) {
+                        return resolve(path.dirname(item.value));
+                    }
+                    regKey.get('Install Dir', (err2, item2) => {
+                        if (!err2 && item2 && fs.existsSync(item2.value)) {
+                            return resolve(item2.value.replace(/"/g, ''));
+                        }
+                        resolve(null);
+                    });
+                });
+            });
+            if (installDir && fs.existsSync(installDir)) break;
+        } catch { }
+    }
+    if (!installDir) return false;
+    const sporebinEP1 = path.join(installDir, 'SporebinEP1');
+    const originalExe = path.join(sporebinEP1, 'SporeApp.exe');
+    const backupExe = path.join(sporebinEP1, 'SporeApp-backup.exe');
+
+    try {
+        if (fs.existsSync(originalExe)) fs.unlinkSync(originalExe);
+        if (fs.existsSync(backupExe)) {
+            fs.renameSync(backupExe, originalExe);
+            return true;
+        }
+    } catch { }
+    return false;
+});
+
+ipcMain.handle('is-4gbpatch-installed', async () => {
+    const regKeys = [
+        { hive: WinReg.HKLM, key: '\\SOFTWARE\\Wow6432Node\\Electronic Arts\\SPORE_EP1' },
+        { hive: WinReg.HKLM, key: '\\SOFTWARE\\Electronic Arts\\SPORE_EP1' }
+    ];
+    let installDir = null;
+    for (const reg of regKeys) {
+        try {
+            const regKey = new WinReg({ hive: reg.hive, key: reg.key });
+            installDir = await new Promise(resolve => {
+                regKey.get('datadir', (err, item) => {
+                    if (!err && item && fs.existsSync(path.dirname(item.value))) {
+                        return resolve(path.dirname(item.value));
+                    }
+                    regKey.get('Install Dir', (err2, item2) => {
+                        if (!err2 && item2 && fs.existsSync(item2.value)) {
+                            return resolve(item2.value.replace(/"/g, ''));
+                        }
+                        resolve(null);
+                    });
+                });
+            });
+            if (installDir && fs.existsSync(installDir)) break;
+        } catch { }
+    }
+    if (!installDir) return false;
+    const sporebinEP1 = path.join(installDir, 'SporebinEP1');
+    const originalExe = path.join(sporebinEP1, 'SporeApp.exe');
+    const backupExe = path.join(sporebinEP1, 'SporeApp-backup.exe');
+    if (!fs.existsSync(backupExe) || !fs.existsSync(originalExe)) return false;
+
+
+    return fileHash(originalExe) !== fileHash(backupExe);
+});
+
+ipcMain.handle('install-sporemod', async (_e, extractedPath, zipPath) => {
+    let configDir = await findSporeConfigDir();
+    if (!configDir) throw new Error('No se pudo encontrar la carpeta de configuración de Spore.');
+
+    if (!configDir.toLowerCase().endsWith('config')) {
+        configDir = path.join(configDir, 'Config');
+    }
+    if (!fs.existsSync(configDir)) {
+        fs.mkdirSync(configDir, { recursive: true });
+    }
+
+    const files = fs.readdirSync(extractedPath);
+    const total = files.length;
+    let copied = 0;
+
+    for (const file of files) {
+        const src = path.join(extractedPath, file);
+        const dest = path.join(configDir, file);
+        if (fs.statSync(src).isFile()) {
+            fs.copyFileSync(src, dest);
+            copied++;
+            if (mainWindow) {
+                mainWindow.webContents.send('mod-install-progress', {
+                    modId: 'unlock60fps',
+                    copied,
+                    total,
+                    percent: Math.round((copied / total) * 100)
+                });
+            }
+        }
+    }
+
+    try {
+        if (zipPath && fs.existsSync(zipPath)) {
+            fs.unlinkSync(zipPath);
+        }
+        if (extractedPath && fs.existsSync(extractedPath)) {
+            fs.rmSync(extractedPath, { recursive: true, force: true });
+        }
+    } catch (e) {
+    }
+
+    return true;
+});
+
+ipcMain.handle('is-unlock60fps-installed', async () => {
+    let configDir = await findSporeConfigDir();
+    if (!configDir) return false;
+    if (!configDir.toLowerCase().endsWith('config')) {
+        configDir = path.join(configDir, 'Config');
+    }
+    const configManager = path.join(configDir, 'ConfigManager.txt');
+    const properties = path.join(configDir, 'Properties.txt');
+    return fs.existsSync(configManager) && fs.existsSync(properties);
+});
+
+ipcMain.handle('uninstall-unlock60fps', async () => {
+    let configDir = await findSporeConfigDir();
+    if (!configDir) return false;
+    if (!configDir.toLowerCase().endsWith('config')) {
+        configDir = path.join(configDir, 'Config');
+    }
+    const files = ['ConfigManager.txt', 'Properties.txt'];
+    let removed = false;
+    for (const file of files) {
+        const filePath = path.join(configDir, file);
+        try {
+            if (fs.existsSync(filePath)) {
+                fs.unlinkSync(filePath);
+                removed = true;
+            }
+        } catch (err) {
+        }
+    }
+
+    return removed;
+});
+
+
+ipcMain.handle('is-hdtextures-installed', async () => {
+    let configDir = await findSporeConfigDir();
+    if (!configDir) return false;
+
+    let configDirNormalized = configDir.replace(/\\/g, '/').replace(/\/+$/, '').toLowerCase();
+    let dataEP1;
+    if (configDirNormalized.endsWith('/config')) {
+        dataEP1 = path.dirname(configDir);
+    } else if (configDirNormalized.endsWith('/dataep1')) {
+        dataEP1 = configDir;
+    } else {
+        const candidate = path.join(configDir, 'DataEP1');
+        if (fs.existsSync(candidate)) {
+            dataEP1 = candidate;
+        } else {
+            return false;
+        }
+    }
+
+    const files = [
+        'MOD_HD_Water.package',
+        'MOD_HD_Textures3.package',
+        'MOD_HD_Textures2.package',
+        'MOD_HD_Textures1.package',
+        'MOD_HD_Planet-textures.package',
+        'MOD_HD_Parts.package',
+        'MOD_HD_Particles.package',
+        'MOD_HD_Meshes2.package',
+        'MOD_HD_Meshes.package',
+        'MOD_HD_LOD-High.package',
+        'MOD_HD_Ground.package',
+        'MOD_HD_Galaxy.package',
+        'MOD_HD_Empire-backgrounds.package',
+        'MOD_HD_Editor-background.package',
+        'MOD_HD_Decals.package',
+        'MOD_HD_Background.package'
+    ];
+
+    return files.every(file => fs.existsSync(path.join(dataEP1, file)));
+});
+
+
+ipcMain.handle('uninstall-hdtextures', async () => {
+    let configDir = await findSporeConfigDir();
+    if (!configDir) return false;
+
+    let configDirNormalized = configDir.replace(/\\/g, '/').replace(/\/+$/, '').toLowerCase();
+    let dataEP1;
+    if (configDirNormalized.endsWith('/config')) {
+        dataEP1 = path.dirname(configDir);
+    } else if (configDirNormalized.endsWith('/dataep1')) {
+        dataEP1 = configDir;
+    } else {
+        const candidate = path.join(configDir, 'DataEP1');
+        if (fs.existsSync(candidate)) {
+            dataEP1 = candidate;
+        } else {
+            return false;
+        }
+    }
+
+    const files = [
+        'MOD_HD_Water.package',
+        'MOD_HD_Textures3.package',
+        'MOD_HD_Textures2.package',
+        'MOD_HD_Textures1.package',
+        'MOD_HD_Planet-textures.package',
+        'MOD_HD_Parts.package',
+        'MOD_HD_Particles.package',
+        'MOD_HD_Meshes2.package',
+        'MOD_HD_Meshes.package',
+        'MOD_HD_LOD-High.package',
+        'MOD_HD_Ground.package',
+        'MOD_HD_Galaxy.package',
+        'MOD_HD_Empire-backgrounds.package',
+        'MOD_HD_Editor-background.package',
+        'MOD_HD_Decals.package',
+        'MOD_HD_Background.package'
+    ];
+    let removed = false;
+    for (const file of files) {
+        const filePath = path.join(dataEP1, file);
+        try {
+            if (fs.existsSync(filePath)) {
+                fs.unlinkSync(filePath);
+                removed = true;
+            }
+        } catch (err) { }
+    }
+    return removed;
 });
 
 ipcMain.handle('uninstall-all-mods', async () => {
     try {
-        const modFiles = [
-            'HD_Decals.package', 'HD_Editor-background.package', 'HD_Empire-backgrounds.package', 'HD_Galaxy.package',
-            'HD_LOD-High.package', 'HD_Meshes.package', 'HD_Meshes2.package', 'HD_Particles.package', 'HD_Parts.package',
-            'HD_Planet-textures.package', 'HD_Water.package', 'HD_Ground.package', 'HD_Background.package',
-            'HD_Textures1.package', 'HD_Textures2.package', 'HD_Textures3.package'
-        ];
-        const configFiles = ['ConfigManager.txt', 'Properties.txt'];
-        const folders = [
-            detectSporeDataPath(), detectGADataPath(),
-            path.join(programFiles, 'EA Games', 'Spore', 'Data'),
-            path.join(programFilesX86, 'EA Games', 'Spore', 'Data'),
-            'C:\\Spore\\Data',
-            'D:\\Spore\\Data',
-            path.join(programFiles, 'EA Games', 'Spore', 'SPORE Galactic Adventures', 'Data'),
-            path.join(programFilesX86, 'EA Games', 'Spore', 'SPORE Galactic Adventures', 'Data'),
-            'D:\\Spore\\SPORE Galactic Adventures\\Data'
-        ].filter((f, i, arr) => f && fs.existsSync(f) && arr.indexOf(f) === i);
-        let success = true;
-        for (const folder of folders) {
-            for (const file of modFiles) {
-                const filePath = path.join(folder, file);
-                if (fs.existsSync(filePath)) try { fs.unlinkSync(filePath); } catch { success = false; }
+        let removedAny = false;
+        const modsPath = path.join(app.getPath('userData'), 'mods');
+        if (fs.existsSync(modsPath)) {
+            fs.rmSync(modsPath, { recursive: true, force: true });
+            removedAny = true;
+        }
+
+        const configDir = await findSporeConfigDir();
+        if (configDir) {
+            const hdPackages = [
+                'MOD_HD_Water.package',
+                'MOD_HD_Textures3.package',
+                'MOD_HD_Textures2.package',
+                'MOD_HD_Textures1.package',
+                'MOD_HD_Planet-textures.package',
+                'MOD_HD_Parts.package',
+                'MOD_HD_Particles.package',
+                'MOD_HD_Meshes2.package',
+                'MOD_HD_Meshes.package',
+                'MOD_HD_LOD-High.package',
+                'MOD_HD_Ground.package',
+                'MOD_HD_Galaxy.package',
+                'MOD_HD_Empire-backgrounds.package',
+                'MOD_HD_Editor-background.package',
+                'MOD_HD_Decals.package',
+                'MOD_HD_Background.package'
+            ];
+            let dataEP1;
+            if (configDir.toLowerCase().endsWith('dataep1')) {
+                dataEP1 = configDir;
+            } else if (configDir.toLowerCase().endsWith('config')) {
+                dataEP1 = path.dirname(configDir);
+            } else {
+                dataEP1 = path.join(path.dirname(configDir), 'DataEP1');
             }
-            const configDir = path.join(folder, 'Config');
-            for (const file of configFiles) {
-                const configPath = path.join(configDir, file);
-                if (fs.existsSync(configPath)) try { fs.unlinkSync(configPath); } catch { success = false; }
+            if (fs.existsSync(dataEP1)) {
+                hdPackages.forEach(file => {
+                    const filePath = path.join(dataEP1, file);
+                    if (fs.existsSync(filePath)) {
+                        fs.unlinkSync(filePath);
+                        removedAny = true;
+                    }
+                });
+            }
+
+            const configPath = configDir.toLowerCase().endsWith('config') ? configDir : path.join(configDir, 'Config');
+            if (fs.existsSync(configPath)) {
+                ['ConfigManager.txt', 'Properties.txt'].forEach(file => {
+                    const filePath = path.join(configPath, file);
+                    if (fs.existsSync(filePath)) {
+                        fs.unlinkSync(filePath);
+                        removedAny = true;
+                    }
+                });
+            }
+
+            const regKeys = [
+                { hive: WinReg.HKLM, key: '\\SOFTWARE\\Wow6432Node\\Electronic Arts\\SPORE_EP1' },
+                { hive: WinReg.HKLM, key: '\\SOFTWARE\\Electronic Arts\\SPORE_EP1' }
+            ];
+            let installDir = null;
+            for (const reg of regKeys) {
+                try {
+                    const regKey = new WinReg({ hive: reg.hive, key: reg.key });
+                    installDir = await new Promise(resolve => {
+                        regKey.get('datadir', (err, item) => {
+                            if (!err && item && fs.existsSync(path.dirname(item.value))) {
+                                return resolve(path.dirname(item.value));
+                            }
+                            regKey.get('Install Dir', (err2, item2) => {
+                                if (!err2 && item2 && fs.existsSync(item2.value)) {
+                                    return resolve(item2.value.replace(/"/g, ''));
+                                }
+                                resolve(null);
+                            });
+                        });
+                    });
+                    if (installDir && fs.existsSync(installDir)) break;
+                } catch { }
+            }
+            if (installDir) {
+                const sporebinEP1 = path.join(installDir, 'SporebinEP1');
+                const originalExe = path.join(sporebinEP1, 'SporeApp.exe');
+                const backupExe = path.join(sporebinEP1, 'SporeApp-backup.exe');
+                try {
+                    if (fs.existsSync(originalExe)) {
+                        fs.unlinkSync(originalExe);
+                        removedAny = true;
+                    }
+                    if (fs.existsSync(backupExe)) {
+                        fs.renameSync(backupExe, originalExe);
+                        removedAny = true;
+                    }
+                } catch { }
             }
         }
-        return success;
-    } catch { return false; }
+        return removedAny;
+    } catch (err) {
+        return false;
+    }
 });

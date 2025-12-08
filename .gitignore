@@ -16,3 +16,6 @@ Mods/
 
 # temp files
 *.tmp
+
+# modapi files
+modapi-launcher-kit-1.5.6/

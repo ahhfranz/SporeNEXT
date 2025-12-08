@@ -1,16 +1,267 @@
-const sporePathInput = document.getElementById('spore-path');
-const gaPathInput = document.getElementById('ga-path');
-const sporeErrorMsg = Object.assign(document.createElement('div'), { style: 'color:red;font-size:0.95em;margin-top:4px;display:none' });
-sporePathInput.parentElement.appendChild(sporeErrorMsg);
-const gaErrorMsg = Object.assign(document.createElement('div'), { style: 'color:red;font-size:0.95em;margin-top:4px;display:none' });
-gaPathInput.parentElement.appendChild(gaErrorMsg);
+console.log('window.electronAPI:', window.electronAPI);
+if (!window.electronAPI) alert('electronAPI no está disponible en el renderer');
 
-let currentTranslations = {}, currentLang = 'en', newVersionAvailable = null;
+window.electronAPI.onUpdateAvailable((_, version) => {
+    console.log('Evento update-available recibido, versión:', version);
+    newVersionAvailable = version;
+    const updatedTextEl = document.querySelector('[data-i18n="updatedText"]');
+    if (updatedTextEl) {
+        updatedTextEl.innerHTML = `${currentTranslations.updateAvailableText} <br><span style="color:#aaa;">${currentTranslations.newVersionLabel || 'New version:'} v${version}</span>`;
+    }
+    const updateBtn = document.getElementById('update-launcher-btn');
+    if (updateBtn) updateBtn.style.display = 'block';
+});
+
+if (window.require) {
+    const { ipcRenderer } = window.require('electron');
+    ipcRenderer.on('download-mod-error', (_event, message) => {
+        alert('Error al descargar el mod:\n' + message);
+    });
+}
+
+let currentTranslations = {}, newVersionAvailable = null;
+
+document.addEventListener('DOMContentLoaded', function () {
+    const filterButtons = document.querySelectorAll('.filter-btn');
+    const modRows = document.querySelectorAll('.mods-table tbody tr');
+
+    filterButtons.forEach(btn => {
+        btn.addEventListener('click', function () {
+            filterButtons.forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+
+            let filter = this.id.replace('filter-', '');
+
+            modRows.forEach(row => {
+                if (filter === 'all') {
+                    row.style.display = '';
+                } else {
+                    if (row.getAttribute('data-category') === filter) {
+                        row.style.display = '';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                }
+            });
+        });
+    });
+
+    document.body.addEventListener('click', function (e) {
+        const target = e.target.closest('a');
+        if (target && target.closest('.disclaimer-text')) {
+            e.preventDefault();
+            window.electronAPI.openExternal(target.href);
+        }
+    });
+});
+
+function setupModButton(modId, options) {
+    const btn = document.querySelector(`.download-mod-spore-btn[data-mod-id="${modId}"]`);
+    if (!btn) return;
+
+    const container = btn.closest('.mod-action-container');
+    const progressBar = container.querySelector('.mod-progress-bar');
+    const progressFill = progressBar.querySelector('.progress-bar-fill');
+    let uninstallFill = progressBar.querySelector('.progress-bar-fill-uninstall');
+    let progressText = container.querySelector('.progress-bar-text');
+    if (!progressText) {
+        progressText = document.createElement('span');
+        progressText.className = 'progress-bar-text';
+        progressText.style.color = '#fff';
+        progressText.style.fontSize = '0.95em';
+        progressText.style.display = 'block';
+        progressText.style.marginTop = '4px';
+        container.appendChild(progressText);
+    }
+
+    async function updateState() {
+        const isInstalled = await options.isInstalled();
+        const span = btn.querySelector('span[data-i18n]');
+        const icon = btn.querySelector('img');
+        if (isInstalled) {
+            btn.classList.add('uninstall-mod-spore-btn');
+            if (span) {
+                span.setAttribute('data-i18n', 'uninstall');
+                span.textContent = currentTranslations.uninstall || 'Uninstall';
+            }
+            if (icon) icon.src = 'assets/spore-uninstall.png';
+        } else {
+            btn.classList.remove('uninstall-mod-spore-btn');
+            if (span) {
+                span.setAttribute('data-i18n', 'download');
+                span.textContent = currentTranslations.download || 'Download';
+            }
+            if (icon) icon.src = 'assets/spore.png';
+        }
+    }
+
+    let downloadListener = null;
+    let installListener = null;
+
+    btn.onclick = async (e) => {
+        e.stopPropagation();
+        await updateState();
+        const span = btn.querySelector('span[data-i18n]');
+        if (span && span.getAttribute('data-i18n') === 'uninstall') {
+
+            if (progressFill) {
+                progressFill.style.display = 'none';
+                progressFill.style.width = '0%';
+            }
+            if (!uninstallFill) {
+                uninstallFill = document.createElement('div');
+                uninstallFill.className = 'progress-bar-fill-uninstall';
+                uninstallFill.style.width = '0%';
+                uninstallFill.style.height = '100%';
+                uninstallFill.style.background = '#ff4d4f';
+                uninstallFill.style.borderRadius = '6px';
+                uninstallFill.style.transition = 'width 5s';
+                progressBar.appendChild(uninstallFill);
+            }
+            uninstallFill.style.width = '0%';
+            uninstallFill.style.display = 'block';
+            btn.style.display = 'none';
+            progressBar.style.display = 'block';
+            progressText.textContent = currentTranslations.uninstalling || 'Desinstalando...';
+            setTimeout(() => uninstallFill.style.width = '100%', 100);
+            setTimeout(async () => {
+                await options.uninstall();
+                progressBar.style.display = 'none';
+                uninstallFill.style.width = '0%';
+                uninstallFill.style.display = 'none';
+                if (progressFill) progressFill.style.display = 'block';
+                btn.style.display = '';
+                progressText.textContent = '';
+                await updateState();
+            }, 5100);
+        } else {
+
+            const modUrl = btn.getAttribute('data-mod-url');
+            if (!modUrl) return;
+            if (progressFill) {
+                progressFill.style.display = 'block';
+                progressFill.style.width = '0%';
+                progressFill.style.transition = 'width 0.2s';
+            }
+            progressText.textContent = '';
+            if (uninstallFill) {
+                uninstallFill.style.display = 'none';
+                uninstallFill.style.width = '0%';
+            }
+            btn.style.display = 'none';
+            progressBar.style.display = 'block';
+
+            const thisModId = modId;
+            downloadListener = (progress) => {
+                if (progress.modId && progress.modId !== thisModId) return;
+                if (progressFill) progressFill.style.width = `${progress.percent}%`;
+                if (progressText) progressText.textContent = `${currentTranslations.downloadingLong || 'Descargando...'} ${progress.percent}%`;
+            };
+            window.electronAPI.onModDownloadProgress(downloadListener);
+
+            let zipPath, extractedPath;
+            try {
+                zipPath = await options.download(modUrl);
+            } catch (e) {
+                if (progressFill) progressFill.style.width = '0%';
+                if (progressText) progressText.textContent = '';
+                btn.style.display = '';
+                setTimeout(() => {
+                    progressBar.style.display = 'none';
+                    progressText.textContent = '';
+                }, 2000);
+                return;
+            }
+
+            installListener = (progress) => {
+                if (progress.modId && progress.modId !== thisModId) return;
+                if (progressFill) progressFill.style.width = `${progress.percent}%`;
+                if (progressText) progressText.textContent = `${currentTranslations.installingLong || 'Instalando...'} ${progress.copied}/${progress.total}`;
+            };
+            window.electronAPI.onModInstallProgress(installListener);
+
+            try {
+                extractedPath = await options.unzip(zipPath);
+                await options.install(extractedPath, zipPath);
+            } catch (e) {
+                if (progressFill) progressFill.style.width = '0%';
+                if (progressText) progressText.textContent = '';
+                btn.style.display = '';
+                setTimeout(() => {
+                    progressBar.style.display = 'none';
+                    progressText.textContent = '';
+                }, 2000);
+                return;
+            }
+
+            setTimeout(async () => {
+                progressBar.style.display = 'none';
+                if (progressFill) progressFill.style.width = '0%';
+                if (progressText) progressText.textContent = '';
+                await updateState();
+                btn.style.display = '';
+            }, 1000);
+        }
+    };
+
+    updateState();
+}
+
+async function updateModButtons() {
+    setupModButton('unlock60fps', {
+        isInstalled: window.electronAPI.isUnlock60fpsInstalled,
+        uninstall: window.electronAPI.uninstallUnlock60fps,
+        download: window.electronAPI.downloadModWithProgress,
+        unzip: window.electronAPI.unzipMod,
+        install: window.electronAPI.installSporemod
+    });
+    setupModButton('HDTextures', {
+        isInstalled: window.electronAPI.isHDTexturesInstalled,
+        uninstall: window.electronAPI.uninstallHDTextures,
+        download: window.electronAPI.downloadModWithProgress,
+        unzip: window.electronAPI.unzipMod,
+        install: window.electronAPI.installHDTextures
+    });
+    setupModButton('4gbpatch', {
+        isInstalled: window.electronAPI.is4gbPatchInstalled,
+        uninstall: window.electronAPI.uninstall4gbPatch,
+        download: window.electronAPI.downloadModWithProgress,
+        unzip: window.electronAPI.unzipMod,
+        install: window.electronAPI.install4gbPatch
+    });
+
+}
 
 window.addEventListener('DOMContentLoaded', async () => {
-    document.querySelector('.window-close')?.addEventListener('click', () => window.electronAPI.closeWindow());
-    document.querySelector('.window-minimize')?.addEventListener('click', () => window.electronAPI.minimizeWindow());
+    const splash = document.getElementById('splash-screen');
+    document.body.classList.add('transparent-launcher');
+    Array.from(document.body.children).forEach(el => {
+        if (el.id !== 'splash-screen') el.style.display = 'none';
+    });
+    splash.style.display = 'flex';
+
+    await updateModButtons();
+
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    document.body.classList.remove('transparent-launcher');
+    Array.from(document.body.children).forEach(el => {
+        if (el.id !== 'splash-screen') el.style.display = '';
+    });
+    splash.style.display = 'none';
+
+    document.querySelector('.launcher-header .window-close')?.addEventListener('click', () => window.electronAPI.closeWindow());
     document.getElementById('discord-btn')?.addEventListener('click', () => window.electronAPI.openDiscord());
+    document.querySelector('.footer-item img[alt="Kofi"]')?.parentElement.addEventListener('click', () => {
+        window.electronAPI.openKofi();
+    });
+    document.querySelectorAll('.window-maximize').forEach(btn =>
+        btn.addEventListener('click', () => window.electronAPI.maximizeWindow())
+    );
+    document.querySelectorAll('.window-minimize').forEach(btn =>
+        btn.addEventListener('click', () => window.electronAPI.minimizeWindow())
+    );
+
     document.getElementById('update-launcher-btn')?.addEventListener('click', async function () {
         if (confirm(currentTranslations.updateConfirm)) {
             this.disabled = true;
@@ -20,21 +271,84 @@ window.addEventListener('DOMContentLoaded', async () => {
         }
     });
 
+    await updateModButtons();
+
+    const searchInput = document.getElementById('mods-search-input');
+    if (searchInput) {
+        searchInput.addEventListener('input', function () {
+            const filter = this.value.trim().toLowerCase();
+            document.querySelectorAll('.mods-table tbody tr').forEach(row => {
+                const nameCell = row.querySelector('.mod-main-title');
+                if (!nameCell) return;
+                const modName = nameCell.textContent.trim().toLowerCase();
+                row.style.display = modName.includes(filter) ? '' : 'none';
+            });
+        });
+    }
+
+    const settingsModal = document.getElementById('settings-modal');
+    const settingsModalContent = settingsModal?.querySelector('.mods-modal-content');
+    document.querySelector('.footer-settings')?.addEventListener('click', () => {
+        document.getElementById('mods-modal')?.classList.add('hidden');
+        if (settingsModal.classList.contains('hidden')) {
+            settingsModal.classList.remove('hidden', 'animating-out');
+            settingsModal.classList.add('animating-in');
+            settingsModalContent.classList.remove('animating-out');
+            settingsModalContent.classList.add('animating-in');
+            setTimeout(() => {
+                settingsModal.classList.remove('animating-in');
+                settingsModalContent.classList.remove('animating-in');
+            }, 350);
+        }
+    });
+    document.getElementById('close-settings-modal')?.addEventListener('click', e => {
+        e.preventDefault();
+        settingsModal?.classList.add('animating-out');
+        settingsModalContent?.classList.add('animating-out');
+        setTimeout(() => {
+            settingsModal?.classList.add('hidden');
+            settingsModal?.classList.remove('animating-out');
+            settingsModalContent?.classList.remove('animating-out');
+        }, 250);
+    });
+
     const modsModal = document.getElementById('mods-modal');
     const modsModalContent = modsModal.querySelector('.mods-modal-content');
+
     document.querySelector('.footer-item img[alt="Install Mods"]')?.parentElement.addEventListener('click', () => {
-        modsModal.classList.remove('hidden', 'animating-out');
-        modsModal.classList.add('animating-in');
-        modsModalContent.classList.remove('animating-out');
-        modsModalContent.classList.add('animating-in');
-        setTimeout(() => {
-            modsModal.classList.remove('animating-in');
-            modsModalContent.classList.remove('animating-in');
-        }, 350);
+        const settingsModal = document.getElementById('settings-modal');
+        const settingsModalContent = settingsModal?.querySelector('.mods-modal-content');
+        if (settingsModal && !settingsModal.classList.contains('hidden')) {
+            settingsModal.classList.add('hidden');
+            settingsModal.classList.remove('animating-in', 'animating-out');
+            settingsModalContent?.classList.remove('animating-in', 'animating-out');
+        }
+
+        document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+        const allBtn = document.getElementById('filter-all');
+        if (allBtn) allBtn.classList.add('active');
+        document.querySelectorAll('.mods-table tbody tr').forEach(row => {
+            row.style.display = '';
+        });
+
+        const modsModal = document.getElementById('mods-modal');
+        const modsModalContent = modsModal.querySelector('.mods-modal-content');
+        if (modsModal.classList.contains('hidden')) {
+            modsModal.classList.remove('hidden', 'animating-out');
+            modsModal.classList.add('animating-in');
+            modsModalContent.classList.remove('animating-out');
+            modsModalContent.classList.add('animating-in');
+            setTimeout(() => {
+                modsModal.classList.remove('animating-in');
+                modsModalContent.classList.remove('animating-in');
+            }, 350);
+        }
     });
 
     document.getElementById('close-mods-modal')?.addEventListener('click', e => {
         e.preventDefault();
+        const modsModal = document.getElementById('mods-modal');
+        const modsModalContent = modsModal.querySelector('.mods-modal-content');
         modsModal.classList.add('animating-out');
         modsModalContent.classList.add('animating-out');
         setTimeout(() => {
@@ -44,117 +358,11 @@ window.addEventListener('DOMContentLoaded', async () => {
         }, 250);
     });
 
-    const settingsModal = document.getElementById('settings-modal');
-    const settingsModalContent = settingsModal.querySelector('.mods-modal-content');
-    document.querySelector('.footer-item img[alt="Settings"]')?.parentElement.addEventListener('click', async () => {
-        settingsModal.classList.remove('hidden', 'animating-out');
-        settingsModal.classList.add('animating-in');
-        settingsModalContent.classList.remove('animating-out');
-        settingsModalContent.classList.add('animating-in');
-        setTimeout(() => {
-            settingsModal.classList.remove('animating-in');
-            settingsModalContent.classList.remove('animating-in');
-        }, 350);
-        await loadLocale(localStorage.getItem('sporeLang') || langSelect.value);
-        await validateSporePath();
-        await validateGAPath();
-    });
-    document.getElementById('close-settings-modal')?.addEventListener('click', e => {
-        e.preventDefault();
-        settingsModal.classList.add('animating-out');
-        settingsModalContent.classList.add('animating-out');
-        setTimeout(() => {
-            settingsModal.classList.add('hidden');
-            settingsModal.classList.remove('animating-out');
-            settingsModalContent.classList.remove('animating-out');
-        }, 250);
-    });
 
-    document.getElementById('uninstall-mods-btn')?.addEventListener('click', async () => {
-        if (!confirm(currentTranslations.uninstallAllConfirm)) return;
-        alert((await window.electronAPI.uninstallAllMods()) ? currentTranslations.uninstallAllSuccess : currentTranslations.uninstallAllError);
-    });
-
-    if (sporePathInput && window.electronAPI.detectSporePath) {
-        const detectedPath = await window.electronAPI.detectSporePath();
-        if (detectedPath) { sporePathInput.value = detectedPath; await validateSporePath(); }
-    }
-    if (gaPathInput && window.electronAPI.detectGAPPath) {
-        const detectedGAPath = await window.electronAPI.detectGAPPath();
-        if (detectedGAPath) { gaPathInput.value = detectedGAPath; await validateGAPath(); }
-    }
-    document.getElementById('browse-spore-path')?.addEventListener('click', async () => {
-        const folder = await window.electronAPI.browseFolder();
-        if (folder) { sporePathInput.value = folder; await validateSporePath(); }
-    });
-    document.getElementById('browse-ga-path')?.addEventListener('click', async () => {
-        const folder = await window.electronAPI.browseFolder();
-        if (folder) { gaPathInput.value = folder; await validateGAPath(); }
-    });
-
-    document.querySelector('.play-btn-spore').addEventListener('click', async () => {
+    document.querySelector('.play-btn-spore')?.addEventListener('click', async () => {
         if (!await window.electronAPI.launchSpore()) alert(currentTranslations.sporeLaunchError);
     });
-    document.querySelector('.play-btn-ga').addEventListener('click', async () => {
-        if (!await window.electronAPI.launchGA()) alert(currentTranslations.gaLaunchError);
-    });
 
-    document.querySelectorAll('.install-mod-btn').forEach(btn => {
-        btn.addEventListener('click', async () => {
-            await window.electronAPI.setSporePath(sporePathInput.value.trim());
-            await window.electronAPI.setGAPath(gaPathInput.value.trim());
-            const target = btn.getAttribute('data-target');
-
-            const alreadyInstalled = await window.electronAPI.isModInstalled(target);
-            if (alreadyInstalled) {
-                const confirmMsg = currentTranslations.modAlreadyInstalledConfirm;
-                const confirmed = await window.electronAPI.showConfirm({
-                    title: currentTranslations.launcherTitle,
-                    message: confirmMsg,
-                    okText: currentTranslations.reinstall,
-                    cancelText: currentTranslations.cancel
-                });
-                if (!confirmed) return;
-            }
-
-            await window.electronAPI.setInstalling(true);
-
-            const progress = btn.parentElement.querySelector('#install-progress');
-            const progressBarFill = progress.querySelector('.progress-bar-fill');
-            const progressText = progress.querySelector('.progress-text');
-            progress.classList.remove('hidden');
-            document.querySelectorAll('.install-mod-btn').forEach(b => b.disabled = true);
-            progressBarFill.classList.remove('progress-bar-fill-spore', 'progress-bar-fill-sporega');
-            progressBarFill.classList.add(target === 'spore' ? 'progress-bar-fill-spore' : 'progress-bar-fill-sporega');
-            progressText.textContent = currentTranslations.installingLong;
-            progressBarFill.style.width = '0%';
-            window.electronAPI.removeModInstallProgressListeners();
-            window.electronAPI.onModInstallProgress(percent => {
-                progressBarFill.style.width = percent + '%';
-                progressText.textContent = percent < 50 ? currentTranslations.downloadingLong : currentTranslations.installingLong;
-            });
-            const result = await window.electronAPI.installMod('mod.zip', target);
-            progressBarFill.style.width = '100%';
-            progressText.textContent = result ? currentTranslations.installComplete : currentTranslations.installError;
-            setTimeout(async () => {
-                progress.classList.add('hidden');
-                document.querySelectorAll('.install-mod-btn').forEach(b => b.disabled = false);
-                progressBarFill.style.width = '0%';
-                progressText.textContent = currentTranslations.installingLong;
-                await window.electronAPI.setInstalling(false);
-            }, 1200);
-        });
-    });
-
-    window.electronAPI.onUpdateAvailable((_, version) => {
-        newVersionAvailable = version;
-        const updatedTextEl = document.querySelector('[data-i18n="updatedText"]');
-        if (updatedTextEl) {
-            updatedTextEl.innerHTML = `${currentTranslations.updateAvailableText} <br><span style="color:#aaa;">${currentTranslations.newVersionLabel || 'New version:'} v${version}</span>`;
-        }
-        const updateBtn = document.getElementById('update-launcher-btn');
-        if (updateBtn) updateBtn.style.display = 'block';
-    });
 
     window.electronAPI.onUpdateDownloaded(() => {
         const updateBtn = document.getElementById('update-launcher-btn');
@@ -165,6 +373,32 @@ window.addEventListener('DOMContentLoaded', async () => {
             updatedTextEl.innerHTML = currentTranslations.updateAvailableText + versionInfo;
         }
     });
+
+    window.electronAPI.onWindowMaximizeChanged?.((_, isMaximized) => {
+        const header = document.querySelector('.launcher-header');
+        if (header) {
+            if (isMaximized) {
+                header.style.webkitAppRegion = 'no-drag';
+            } else {
+                header.style.webkitAppRegion = 'drag';
+            }
+        }
+    });
+
+
+    const langSelect = document.getElementById('lang-select');
+    if (langSelect) {
+        langSelect.addEventListener('change', async () => {
+            const lang = langSelect.value;
+            localStorage.setItem('sporeLang', lang);
+            await window.electronAPI.setLanguage(lang);
+            await loadLocale(lang);
+        });
+        langSelect.value = localStorage.getItem('sporeLang') || 'en';
+        loadLocale(langSelect.value);
+    } else {
+        loadLocale('en');
+    }
 });
 
 async function loadLocale(lang) {
@@ -173,18 +407,38 @@ async function loadLocale(lang) {
     if (!response.ok) return;
     const translations = await response.json();
     currentTranslations = translations;
-    currentLang = lang;
     document.querySelectorAll('[data-i18n]').forEach(el => {
         const key = el.getAttribute('data-i18n');
-        if (translations[key]) {
-            if (['INPUT', 'SELECT', 'TEXTAREA'].includes(el.tagName)) el.placeholder = translations[key];
-            else el.innerHTML = translations[key];
+        if (!translations[key]) return;
+
+        if (key === 'disclaimerText') {
+            el.innerHTML = translations[key];
+            return;
+        }
+
+
+        if (['INPUT', 'SELECT', 'TEXTAREA'].includes(el.tagName)) {
+            el.placeholder = translations[key];
+        } else if (el.children.length === 0) {
+            el.textContent = translations[key];
+        } else {
+            const span = el.querySelector('span');
+            if (span) span.textContent = translations[key];
         }
     });
+
+
+
+    const searchInput = document.getElementById('mods-search-input');
+    if (searchInput && translations.modsSearchPlaceholder) {
+        searchInput.placeholder = translations.modsSearchPlaceholder;
+    }
+
     document.title = translations['title'] || document.title;
 
     const launcherTitleEl = document.querySelector('.launcher-title');
     if (launcherTitleEl && window.electronAPI.getAppVersion) {
+        launcherTitleEl.textContent = currentTranslations.launcherTitle || 'Spore NEXT Launcher';
         const version = await window.electronAPI.getAppVersion();
         launcherTitleEl.innerHTML += ` <span style="color:#aaa;font-size:0.85em;">v${version}</span>`;
     }
@@ -195,34 +449,14 @@ async function loadLocale(lang) {
     }
 }
 
-const langSelect = document.getElementById('lang-select');
-if (langSelect) {
-    langSelect.addEventListener('change', async () => {
-        const lang = langSelect.value;
-        localStorage.setItem('sporeLang', lang);
-        await window.electronAPI.setLanguage(lang);
-        await loadLocale(lang);
-        await validateSporePath();
-        await validateGAPath();
-    });
-    langSelect.value = localStorage.getItem('sporeLang') || 'en';
-    loadLocale(langSelect.value);
-} else {
-    loadLocale('en');
-}
-
-async function validateSporePath() {
-    const isValid = await window.electronAPI.checkSporePath(sporePathInput.value, 'spore');
-    sporeErrorMsg.textContent = currentTranslations.sporePathError;
-    sporeErrorMsg.style.display = isValid ? 'none' : 'block';
-}
-async function validateGAPath() {
-    const isValid = await window.electronAPI.checkSporePath(gaPathInput.value, 'ga');
-    gaErrorMsg.textContent = currentTranslations.gaPathError;
-    gaErrorMsg.style.display = isValid ? 'none' : 'block';
-}
-
-sporePathInput.addEventListener('change', async () => { await window.electronAPI.setSporePath(sporePathInput.value); validateSporePath(); });
-sporePathInput.addEventListener('input', async () => { await window.electronAPI.setSporePath(sporePathInput.value.trim()); validateSporePath(); });
-gaPathInput.addEventListener('change', async () => { await window.electronAPI.setGAPath(gaPathInput.value); validateGAPath(); });
-gaPathInput.addEventListener('input', async () => { await window.electronAPI.setGAPath(gaPathInput.value.trim()); validateGAPath(); });
+document.getElementById('extra-action-btn')?.addEventListener('click', async () => {
+    if (confirm(currentTranslations.uninstallAllConfirm || "¿Seguro que quieres desinstalar todos los mods?")) {
+        const success = await window.electronAPI.uninstallAllMods();
+        await updateModButtons();
+        if (success) {
+            alert(currentTranslations.uninstallAllSuccess || "Todos los mods han sido desinstalados.");
+        } else {
+            alert(currentTranslations.uninstallAllNone || "No había mods instalados para desinstalar.");
+        }
+    }
+});
