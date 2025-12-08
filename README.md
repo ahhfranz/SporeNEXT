@@ -1,20 +1,20 @@
 # Spore NEXT Launcher
 
-Spore NEXT Launcher is an open-source desktop application designed to simplify the installation, management, and removal of the **Spore NEXT HD modpack** for **Spore** and **Spore: Galactic Adventures**.
+**Spore NEXT Launcher** is an open-source mod manager designed to make installing, updating, and removing mods for Spore: Galactic Adventures effortless.
+Originally created just to install an HD Textures mod pack, the launcher has evolved into a mod catalog where players can either install or uninstall a variety of mods with just a few clicks. (Work in progress)
 
-This launcher provides an easy, automated way to enhance your Spore experience with high-resolution textures, visual improvements, and gameplay optimizations — including unlocking 60 FPS.
+This project is fully non-profit and built as part of my learning journey with JavaScript and Electron.js.
+It’s still an early release, so some bugs may appear — updates and fixes will be rolled out continuously based on community feedback.
 
 ---
 
 ## 📆 Features
 
 * ✅ **One-click installation** of HD textures, enhanced lighting, and gameplay tweaks.
-* ✅ **Automatic 60 FPS unlock** (from the original 30 FPS cap).
-* ✅ **Automatic detection of game paths** for Steam and EA App.
+* ✅ **60 FPS unlock** (from the original 30 FPS cap).
 * ✅ **Simple mod uninstallation** with just one click.
 * ✅ **Multilanguage support:** Spanish and English.
 * ✅ **Modern and intuitive interface.**
-* ✅ **Direct download of the modpack** — no manual downloads needed.
  
 ---
 
@@ -23,15 +23,7 @@ This launcher provides an easy, automated way to enhance your Spore experience w
 ### Requirements
 
 * Windows 10 or higher.
-* A legitimate copy of **Spore** or **Spore: Galactic Adventures** (Steam, EA App, or other sources).
-
-### Installation
-
-1. Download the latest version of the launcher from the [Releases](https://github.com/ahhfranz/SporeNEXT/releases) section.
-2. Open the launcher. If paths are not detected automatically, set them manually.
-3. Click the Install button, then choose the game you want to install the mods for (Spore / Spore GA.)
-4. It will start downloading and installing the mod pack, just wait about 2-3 minutes.
-5. Done! Enjoy Spore with enhanced HD visuals.
+* A legitimate copy of **Spore: Galactic Adventures** (Steam).
 
 ### Uninstallation
 
@@ -45,7 +37,6 @@ This is an early release and may contain some bugs or limitations. I'm actively 
 
 If you experience any problems:
 
-* Double-check that your game paths are correctly set.
 * Restart the launcher with administrator privileges.
 * Report any issues via [GitHub Issues](https://github.com/ahhfranz/SporeNEXT/issues) or PM me on Discord.
 
