@@ -23,7 +23,7 @@ It’s still an early release, so some bugs may appear — updates and fixes wil
 ### Requirements
 
 * Windows 10 or higher.
-* A legitimate copy of **Spore: Galactic Adventures** (Steam).
+* A legitimate copy of **Spore** or **Spore: Galactic Adventures** (Steam).
 
 ### Uninstallation
 

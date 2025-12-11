@@ -49,9 +49,24 @@
         <img class="background-video" src="assets/background.gif" alt="Background" />
         <div class="launcher-header">
             <div class="window-controls">
-                <button class="window-minimize">—</button>
-                <button class="window-maximize">☐</button>
-                <button class="window-close">✖</button>
+                <button class="window-minimize">
+                    <svg width="12" height="12" viewBox="0 0 12 12">
+                        <rect x="2" y="6" width="8" height="1.5" />
+                    </svg>
+                </button>
+
+                <button class="window-maximize">
+                    <svg width="12" height="12" viewBox="0 0 12 12">
+                        <rect x="2.5" y="2.5" width="7" height="7" fill="none" stroke="currentColor" stroke-width="1" />
+                    </svg>
+                </button>
+
+                <button class="window-close">
+                    <svg width="12" height="12" viewBox="0 0 12 12">
+                        <line x1="3" y1="3" x2="9" y2="9" stroke="currentColor" stroke-width="1.5" />
+                        <line x1="3" y1="9" x2="9" y2="3" stroke="currentColor" stroke-width="1.5" />
+                    </svg>
+                </button>
             </div>
         </div>
 
@@ -61,8 +76,14 @@
             </div>
             <p data-i18n="updatedText"></p>
             <div class="launcher-buttons">
-                <button class="play-btn-spore"><img src="assets/spore.png" alt="Spore" draggable="false"
-                        data-i18n="sporeIcon"> <span data-i18n="startSpore"></span></button>
+                <button class="play-btn-spore-base">
+                    <img src="assets/spore.png" alt="Spore" draggable="false" data-i18n="sporeBaseIcon">
+                    <span data-i18n="startSpore"></span>
+                </button>
+                <button class="play-btn-sporega">
+                    <img src="assets/sporega.png" alt="Spore GA" draggable="false" data-i18n="sporeGAIcon">
+                    <span data-i18n="startGA"></span>
+                </button>
             </div>
             <button id="update-launcher-btn"><span data-i18n="updateLauncher"></span></button>
         </div>
@@ -70,10 +91,29 @@
         <div id="settings-modal" class="mods-modal hidden">
             <div class="mods-modal-content settings-modal-content">
                 <div class="window-controls modal-window-controls">
-                    <button class="window-minimize">—</button>
-                    <button class="window-maximize">☐</button>
-                    <button class="window-close" id="close-settings-modal">✖</button>
+
+                    <button class="window-minimize">
+                        <svg viewBox="0 0 12 12">
+                            <rect x="2" y="6" width="8" height="1.5" />
+                        </svg>
+                    </button>
+
+                    <button class="window-maximize">
+                        <svg viewBox="0 0 12 12">
+                            <rect x="2.5" y="2.5" width="7" height="7" fill="none" stroke="currentColor"
+                                stroke-width="1.5" />
+                        </svg>
+                    </button>
+
+                    <button class="window-close" id="close-settings-modal">
+                        <svg viewBox="0 0 12 12">
+                            <line x1="3" y1="3" x2="9" y2="9" stroke-width="1.5" />
+                            <line x1="3" y1="9" x2="9" y2="3" stroke-width="1.5" />
+                        </svg>
+                    </button>
+
                 </div>
+
                 <div class="mods-title-bar">
                     <img src="assets/spore-next-emblem.png" alt="Mods" class="mods-title-icon" draggable="false">
                     <span class="mods-title-text" data-i18n="settingsTitle"></span>
@@ -119,9 +159,27 @@
         <div id="mods-modal" class="mods-modal hidden">
             <div class="mods-modal-content">
                 <div class="window-controls modal-window-controls">
-                    <button class="window-minimize">—</button>
-                    <button class="window-maximize">☐</button>
-                    <button class="window-close" id="close-mods-modal">✖</button>
+
+                    <button class="window-minimize">
+                        <svg viewBox="0 0 12 12">
+                            <rect x="2" y="6" width="8" height="1.5" />
+                        </svg>
+                    </button>
+
+                    <button class="window-maximize">
+                        <svg viewBox="0 0 12 12">
+                            <rect x="2.5" y="2.5" width="7" height="7" fill="none" stroke="currentColor"
+                                stroke-width="1.5" />
+                        </svg>
+                    </button>
+
+                    <button class="window-close" id="close-mods-modal">
+                        <svg viewBox="0 0 12 12">
+                            <line x1="3" y1="3" x2="9" y2="9" stroke-width="1.5" />
+                            <line x1="3" y1="9" x2="9" y2="3" stroke-width="1.5" />
+                        </svg>
+                    </button>
+
                 </div>
 
                 <div class="mods-title-row">
@@ -166,7 +224,6 @@
                             </tr>
                         </thead>
 
-
                         <tbody>
                             <tr data-category="optimization">
                                 <td>
@@ -179,110 +236,161 @@
                                         </div>
                                     </div>
                                 </td>
-
                                 <td>
                                     <div class="mod-action-container">
-                                        <button class="download-mod-spore-btn" data-mod-id="4gbpatch"
-                                            data-mod-url="https://pub-f564be9e0d7346339919d7f640464d71.r2.dev/4GBPatch.zip">
+                                        <div class="mod-action-btn-group">
+                                            <button class="download-mod-spore-btn" data-mod-id="4gbpatch"
+                                                data-mod-url="https://pub-f564be9e0d7346339919d7f640464d71.r2.dev/4GBPatch-Base.zip"
+                                                data-game-type="base">
+                                                <img src="assets/spore.png" alt="Spore"
+                                                    style="width:20px;height:20px;vertical-align:middle;"
+                                                    draggable="false">
+                                                <span data-i18n="download"></span>
+                                            </button>
+                                            <div class="mod-progress-bar" style="display:none;">
+                                                <div class="progress-bar-fill"
+                                                    style="width:0%;height:18px;border-radius:6px;"></div>
+                                            </div>
+                                            <span class="progress-bar-text"
+                                                style="color:#fff;font-size:0.95em;display:block;margin-top:4px;"></span>
+                                        </div>
+                                        <div class="mod-action-btn-group">
+                                            <button class="download-mod-sporega-btn" data-mod-id="4gbpatch"
+                                                data-mod-url="https://pub-f564be9e0d7346339919d7f640464d71.r2.dev/4GBPatch.zip"
+                                                data-game-type="ga">
+                                                <img src="assets/sporega.png" alt="Spore"
+                                                    style="width:20px;height:20px;vertical-align:middle;"
+                                                    draggable="false">
+                                                <span data-i18n="download"></span>
+                                            </button>
+                                            <div class="mod-progress-bar" style="display:none;">
+                                                <div class="progress-bar-fill-ga"
+                                                    style="width:0%;height:18px;border-radius:6px;"></div>
+                                            </div>
+                                            <span class="progress-bar-text"
+                                                style="color:#fff;font-size:0.95em;display:block;margin-top:4px;"></span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td><span class="badge-style" data-i18n="mod4gbpatchSize"></span></td>
+                                <td><span data-i18n="mod4gbpatchDescription"></span></td>
+                                <td><span data-i18n="mod4gbpatchAuthor"></span></td>
+                                <td><span class="badge-style badge-optimization"
+                                        data-i18n="modCategoryOptimization"></span></td>
+                            </tr>
+                        </tbody>
+                        <tbody>
+                            <tr data-category="optimization">
+                                <td>
+                                    <div class="mod-name-cell">
+                                        <img src="assets/mod-60fps.png" alt="Mod 60fps" class="mod-icon"
+                                            draggable="false">
+                                        <div>
+                                            <span class="mod-main-title" data-i18n="mod60fpsTitle"></span>
+                                            <span class="mod-file-name" data-i18n="mod60fpsFile"></span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="mod-action-container">
+                                        <div class="mod-action-btn-group">
+                                            <button class="download-mod-spore-btn" data-mod-id="unlock60fps"
+                                                data-mod-url="https://pub-f564be9e0d7346339919d7f640464d71.r2.dev/Unlock60fps.zip"
+                                                data-game-type="base">
+                                                <img src="assets/spore.png" alt="Spore"
+                                                    style="width:20px;height:20px;vertical-align:middle;"
+                                                    draggable="false">
+                                                <span data-i18n="download"></span>
+                                            </button>
+                                            <div class="mod-progress-bar" style="display:none;">
+                                                <div class="progress-bar-fill"
+                                                    style="width:0%;height:18px;border-radius:6px;"></div>
+                                            </div>
+                                            <span class="progress-bar-text"
+                                                style="color:#fff;font-size:0.95em;display:block;margin-top:4px;"></span>
+                                        </div>
+                                        <div class="mod-action-btn-group">
+                                            <button class="download-mod-sporega-btn" data-mod-id="unlock60fps"
+                                                data-mod-url="https://pub-f564be9e0d7346339919d7f640464d71.r2.dev/Unlock60fps.zip"
+                                                data-game-type="ga">
+                                                <img src="assets/sporega.png" alt="Spore"
+                                                    style="width:20px;height:20px;vertical-align:middle;"
+                                                    draggable="false">
+                                                <span data-i18n="download"></span>
+                                            </button>
+                                            <div class="mod-progress-bar" style="display:none;">
+                                                <div class="progress-bar-fill-ga"
+                                                    style="width:0%;height:18px;border-radius:6px;"></div>
+                                            </div>
+                                            <span class="progress-bar-text"
+                                                style="color:#fff;font-size:0.95em;display:block;margin-top:4px;"></span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td><span class="badge-style" data-i18n="mod60fpsSize"></span></td>
+                                <td><span data-i18n="mod60fpsDescription"></span></td>
+                                <td><span data-i18n="mod60fpsAuthor"></span></td>
+                                <td><span class="badge-style badge-optimization"
+                                        data-i18n="modCategoryOptimization"></span></td>
+                            </tr>
+                        </tbody>
+                        <tr data-category="textures">
+                            <td>
+                                <div class="mod-name-cell">
+                                    <img src="assets/mod-hd.png" alt="Mod HD Textures" class="mod-icon"
+                                        draggable="false">
+                                    <div>
+                                        <span class="mod-main-title" data-i18n="modHDTitle"></span>
+                                        <span class="mod-file-name" data-i18n="modHDFile"></span>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="mod-action-container">
+                                    <div class="mod-action-btn-group">
+                                        <button class="download-mod-spore-btn" data-mod-id="HDTextures"
+                                            data-mod-url="https://pub-f564be9e0d7346339919d7f640464d71.r2.dev/HDTextures.zip"
+                                            data-game-type="base">
                                             <img src="assets/spore.png" alt="Spore"
                                                 style="width:20px;height:20px;vertical-align:middle;" draggable="false">
                                             <span data-i18n="download"></span>
                                         </button>
                                         <div class="mod-progress-bar" style="display:none;">
                                             <div class="progress-bar-fill"
-                                                style="width:0%;background:#4d9cff;height:18px;border-radius:6px;">
-                                            </div>
+                                                style="width:0%;height:18px;border-radius:6px;"></div>
                                         </div>
                                         <span class="progress-bar-text"
                                             style="color:#fff;font-size:0.95em;display:block;margin-top:4px;"></span>
                                     </div>
-                </div>
-                </td>
-                <td><span class="badge-style" data-i18n="mod4gbpatchSize"></span></td>
-                <td><span data-i18n="mod4gbpatchDescription"></span></td>
-                <td><span data-i18n="mod4gbpatchAuthor"></span></td>
-                <td><span class="badge-style" data-i18n="modCategoryOptimization"></span></td>
-                </tr>
-                </tbody>
-
-                <tbody>
-                    <tr data-category="optimization">
-                        <td>
-                            <div class="mod-name-cell">
-                                <img src="assets/mod-60fps.png" alt="Mod 60fps" class="mod-icon" draggable="false">
-                                <div>
-                                    <span class="mod-main-title" data-i18n="mod60fpsTitle"></span>
-                                    <span class="mod-file-name" data-i18n="mod60fpsFile"></span>
-                                </div>
-                            </div>
-                        </td>
-
-                        <td>
-                            <div class="mod-action-container">
-                                <button class="download-mod-spore-btn" data-mod-id="unlock60fps"
-                                    data-mod-url="https://pub-f564be9e0d7346339919d7f640464d71.r2.dev/Unlock60fps.zip">
-                                    <img src="assets/spore.png" alt="Spore"
-                                        style="width:20px;height:20px;vertical-align:middle;" draggable="false">
-                                    <span data-i18n="download"></span>
-                                </button>
-                                <div class="mod-progress-bar" style="display:none;">
-                                    <div class="progress-bar-fill"
-                                        style="width:0%;background:#4d9cff;height:18px;border-radius:6px;">
+                                    <div class="mod-action-btn-group">
+                                        <button class="download-mod-sporega-btn" data-mod-id="HDTextures"
+                                            data-mod-url="https://pub-f564be9e0d7346339919d7f640464d71.r2.dev/HDTextures.zip"
+                                            data-game-type="ga">
+                                            <img src="assets/sporega.png" alt="Spore"
+                                                style="width:20px;height:20px;vertical-align:middle;" draggable="false">
+                                            <span data-i18n="download"></span>
+                                        </button>
+                                        <div class="mod-progress-bar" style="display:none;">
+                                            <div class="progress-bar-fill-ga"
+                                                style="width:0%;height:18px;border-radius:6px;"></div>
+                                        </div>
+                                        <span class="progress-bar-text"
+                                            style="color:#fff;font-size:0.95em;display:block;margin-top:4px;"></span>
                                     </div>
                                 </div>
-                                <span class="progress-bar-text"
-                                    style="color:#fff;font-size:0.95em;display:block;margin-top:4px;"></span>
-                            </div>
+                            </td>
+                            <td><span class="badge-style" data-i18n="modHDSize"></span></td>
+                            <td><span data-i18n="modHDDescription"></span></td>
+                            <td><span data-i18n="modHDAuthor"></span></td>
+                            <td><span class="badge-style badge-textures" data-i18n="modCategoryTextures"></span></td>
+                        </tr>
+                        </tbody>
+
+                    </table>
+                </div>
             </div>
-            </td>
-            <td><span class="badge-style" data-i18n="mod60fpsSize"></span></td>
-            <td><span data-i18n="mod60fpsDescription"></span></td>
-            <td><span data-i18n="mod60fpsAuthor"></span></td>
-            <td><span class="badge-style" data-i18n="modCategoryOptimization"></span></td>
-            </tr>
-            </tbody>
-
-            <tr data-category="textures">
-                <td>
-                    <div class="mod-name-cell">
-                        <img src="assets/mod-hd.png" alt="Mod HD Textures" class="mod-icon" draggable="false">
-                        <div>
-                            <span class="mod-main-title" data-i18n="modHDTitle"></span>
-                            <span class="mod-file-name" data-i18n="modHDFile"></span>
-                        </div>
-                    </div>
-                </td>
-                <td>
-                    <div class="mod-action-container">
-                        <button class="download-mod-spore-btn" data-mod-id="HDTextures"
-                            data-mod-url="https://pub-f564be9e0d7346339919d7f640464d71.r2.dev/HDTextures.zip">
-                            <img src="assets/spore.png" alt="Spore"
-                                style="width:20px;height:20px;vertical-align:middle;" draggable="false">
-                            <span data-i18n="download"></span>
-                        </button>
-                        <div class="mod-progress-bar" style="display:none;">
-                            <div class="progress-bar-fill"
-                                style="width:0%;background:#4d9cff;height:18px;border-radius:6px;">
-                            </div>
-                        </div>
-                        <span class="progress-bar-text"
-                            style="color:#fff;font-size:0.95em;display:block;margin-top:4px;"></span>
-                    </div>
+            <script src="renderer.js"></script>
         </div>
-        </td>
-        <td><span class="badge-style" data-i18n="modHDSize"></span></td>
-        <td><span data-i18n="modHDDescription"></span></td>
-        <td><span data-i18n="modHDAuthor"></span></td>
-        <td><span class="badge-style" data-i18n="modCategoryTextures"></span></td>
-        </tr>
-        </tbody>
-
-
-        </table>
-    </div>
-    </div>
-    <script src="renderer.js"></script>
-    </div>
     </div>
 </body>
 

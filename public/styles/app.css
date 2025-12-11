@@ -12,7 +12,6 @@ body {
     background: #222;
     margin: 0;
     font-family: 'Segoe UI', Arial, sans-serif;
-    overflow: hidden;
     user-select: none;
 }
 
@@ -114,25 +113,38 @@ input:focus {
     color: #fff;
     border: none;
     border-radius: 5px;
-    font-size: 25px;
     cursor: pointer;
     width: 36px;
     height: 36px;
     -webkit-app-region: no-drag;
     display: flex;
+    align-items: center;
     justify-content: center;
-    transition: color 0.18s, box-shadow 0.18s;
+    transition: color 0.18s, box-shadow 0.18s, background 0.18s;
     box-shadow: 0 2px 8px #2222;
 }
 
+.window-controls button svg {
+    width: 22px;
+    height: 22px;
+}
+
+/* Ajustes para SVG */
+.window-close svg,
+.window-minimize svg,
+.window-maximize svg {
+    width: 18px;
+    height: 18px;
+    stroke: currentColor;
+    fill: none;
+}
+
+/* Hover con colores originales */
 .window-close:hover {
     color: #ff4d4f;
 }
 
-.window-minimize:hover {
-    color: #4d9cff;
-}
-
+.window-minimize:hover,
 .window-maximize:hover {
     color: #4d9cff;
 }
@@ -162,7 +174,7 @@ input:focus {
     margin-bottom: 24px;
 }
 
-.play-btn-spore {
+.play-btn-spore-base {
     background: #2884f5;
     color: #fff;
     border: none;
@@ -175,12 +187,12 @@ input:focus {
     align-self: center;
 }
 
-.play-btn-spore:hover {
+.play-btn-spore-base:hover {
     background: #0854b1;
     box-shadow: 0 0 35px #0854b1;
 }
 
-.play-btn-ga {
+.play-btn-sporega {
     background: #ff7f50;
     color: #fff;
     border: none;
@@ -193,21 +205,21 @@ input:focus {
     align-self: center;
 }
 
-.play-btn-ga:hover {
+.play-btn-sporega:hover {
     background: #d44d1b;
     box-shadow: 0 0 35px #d44d1b;
 }
 
-.play-btn-spore,
-.play-btn-ga {
+.play-btn-spore-base,
+.play-btn-sporega {
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 10px;
 }
 
-.play-btn-spore img,
-.play-btn-ga img {
+.play-btn-spore-base img,
+.play-btn-sporega img {
     width: 30px;
     height: 30px;
     margin-left: -8px;
@@ -579,6 +591,11 @@ input:focus {
     z-index: 1;
 }
 
+.progress-bar-fill-ga {
+    background: #d8860c;
+    z-index: 1;
+}
+
 .progress-bar-fill-uninstall {
     position: absolute;
     left: 0;
@@ -753,20 +770,20 @@ input:focus {
 
 .mods-table th:nth-child(2),
 .mods-table td:nth-child(2) {
-    width: 5%;
+    width: 4%;
     white-space: normal;
 }
 
 .mods-table th:nth-child(3),
 .mods-table td:nth-child(3) {
-    width: 3%;
+    width: 2%;
     white-space: normal;
     font-weight: bold;
 }
 
 .mods-table th:nth-child(4),
 .mods-table td:nth-child(4) {
-    width: 13%;
+    width: 12%;
     white-space: normal;
     word-break: break-word;
 }
@@ -775,7 +792,7 @@ input:focus {
 .mods-table td:nth-child(5) {
     width: 2%;
     white-space: normal;
-    padding: 0px 0 0 35px;
+    padding: 0px 25px 0px 25px;
 }
 
 .mods-table th:nth-child(6),
@@ -888,6 +905,37 @@ input:focus {
 }
 
 .download-mod-spore-btn img {
+    width: 26px;
+    height: 26px;
+    margin: 0;
+    padding: 0;
+    display: block;
+}
+
+.download-mod-sporega-btn {
+    background: #d8860c;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 7px 28px;
+    cursor: pointer;
+    box-shadow: 0 2px 6px #222;
+    transition: background 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-size: 1em;
+    font-weight: 600;
+    margin: 5px 0px 0px 0px;
+}
+
+.download-mod-sporega-btn:hover {
+    background: #b1640c;
+    box-shadow: 0 4px 16px #bd7e09;
+}
+
+.download-mod-sporega-btn img {
     width: 26px;
     height: 26px;
     margin: 0;
@@ -1130,6 +1178,23 @@ body.transparent-launcher #splash-screen {
     background: #333333;
     border-radius: 5px;
     padding: 7px;
+    text-transform: uppercase;
+    font-size: 14px;
+}
+
+.badge-optimization {
+    background: #0d6816;
+    color: #fff;
+}
+
+.badge-textures {
+    background: #4a088b;
+    color: #fff;
+}
+
+.badge-overhaul {
+    background: #b85c0a;
+    color: #fff;
 }
 
 .disclaimer-text {
@@ -1191,7 +1256,7 @@ body.transparent-launcher #splash-screen {
     .mods-table thead tr th,
     .mods-table tbody tr td {
         font-size: 0.95em;
-        padding: 5px 15px;
+        padding: 5px 10px;
     }
 
     .mod-name-cell {
@@ -1206,7 +1271,7 @@ body.transparent-launcher #splash-screen {
 
     .mods-table th:nth-child(1),
     .mods-table td:nth-child(1) {
-        width: 12%;
+        width: 13%;
         white-space: normal;
     }
 
@@ -1218,7 +1283,7 @@ body.transparent-launcher #splash-screen {
 
     .mods-table th:nth-child(3),
     .mods-table td:nth-child(3) {
-        width: 7%;
+        width: 6%;
         white-space: normal;
     }
 
@@ -1232,6 +1297,7 @@ body.transparent-launcher #splash-screen {
     .mods-table td:nth-child(5) {
         width: 10%;
         white-space: normal;
+        padding: 0px 15px 0px 20px;
     }
 
     .mods-table th:nth-child(6),
@@ -1241,12 +1307,16 @@ body.transparent-launcher #splash-screen {
     }
 
     .download-mod-spore-btn,
-    .uninstall-mod-spore-btn {
+    .uninstall-mod-spore-btn,
+    .download-mod-sporega-btn,
+    .uninstall-mod-sporega-btn {
         min-width: 120px;
         max-width: 120px;
         font-size: 0.9em;
         text-align: center;
         justify-content: center;
+        margin: 10px 0px 10px 0px;
+        padding: 7px 0px;
     }
 
     .mod-progress-bar {
@@ -1256,9 +1326,5 @@ body.transparent-launcher #splash-screen {
         border-radius: 6px;
         background: #23272f;
         overflow: hidden;
-    }
-
-    .download-mod-spore-btn {
-        padding: 7px 0px;
     }
 }

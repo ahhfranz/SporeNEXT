@@ -4,22 +4,24 @@ import path from 'path';
 import fs from 'fs';
 import pkg from 'electron-updater';
 import fetch from 'node-fetch';
-import AdmZip from 'adm-zip';
 import crypto from 'crypto';
 import WinReg from 'winreg';
 import https from 'https';
-import { fork, spawn } from 'child_process';
+import { fork, spawn, exec } from 'child_process';
 
-app.disableHardwareAcceleration();
 app.setName('Spore NEXT');
+
+app.commandLine.appendSwitch('disable-background-timer-throttling');
+app.commandLine.appendSwitch('disable-renderer-backgrounding');
 
 const { autoUpdater } = pkg;
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+const activeDownloads = {};
+const activeZipTasks = {};
 
 let mainWindow = null;
 let isInstalling = false;
-
 let currentLang = 'en';
 let translations = {};
 
@@ -50,15 +52,17 @@ function createWindow() {
         webPreferences: {
             preload: path.join(__dirname, '../../src/main/preload.js'),
             contextIsolation: true,
-            nodeIntegration: false
+            nodeIntegration: false,
+            backgroundThrottling: false
         },
         transparent: true,
         backgroundColor: '#00000000',
     });
     mainWindow.loadFile(path.join(__dirname, '../../public/index.html'));
 
-    mainWindow.webContents.on('did-finish-load', () => {
-    });
+    mainWindow.webContents.setBackgroundThrottling(false);
+
+    mainWindow.webContents.on('did-finish-load', () => { });
 
     mainWindow.webContents.on('before-input-event', (event, input) => {
         if (input.key === 'F11') {
@@ -166,65 +170,101 @@ ipcMain.handle('show-confirm', async (_e, options) => {
     return result.response === 0;
 });
 
-ipcMain.handle('download-mod-with-progress', async (_event, url) => {
-    try {
-        const urlObj = new URL(url);
-        let fileId = urlObj.searchParams.get('id');
-        if (!fileId) {
-            fileId = path.basename(urlObj.pathname, '.zip');
-        }
-        const tempPath = path.join(app.getPath('temp'), `${fileId}.zip`);
-        const agent = new https.Agent({ rejectUnauthorized: false });
-        const res = await fetch(url, {
-            headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) SporeNEXTLauncher'
-            },
-            agent
-        });
-        if (!res.ok) throw new Error('No se pudo descargar el mod: ' + res.status + ' ' + res.statusText);
-
-        const total = Number(res.headers.get('content-length')) || 0;
-        let downloaded = 0;
-        const fileStream = fs.createWriteStream(tempPath);
-
-        const modId = fileId;
-
-        return await new Promise((resolve, reject) => {
-            res.body.on('data', (chunk) => {
-                downloaded += chunk.length;
-                if (mainWindow && total) {
-                    mainWindow.webContents.send('mod-download-progress', {
-                        modId,
-                        downloaded,
-                        total,
-                        percent: Math.round((downloaded / total) * 100)
-                    });
-                }
-            });
-            res.body.pipe(fileStream);
-            fileStream.on('finish', () => {
-                if (mainWindow && total) {
-                    mainWindow.webContents.send('mod-download-progress', {
-                        modId,
-                        downloaded: total,
-                        total,
-                        percent: 100
-                    });
-                }
-                resolve(tempPath);
-            });
-            fileStream.on('error', (err) => {
-                reject(err);
-            });
-        });
-    } catch (err) {
-        if (mainWindow) {
-            mainWindow.webContents.send('download-mod-error', err.message || String(err));
-        }
-        throw err;
+ipcMain.handle('download-mod-with-progress', async (_event, url, gameType, installId) => {
+    const urlObj = new URL(url);
+    let fileId = urlObj.searchParams.get('id');
+    if (!fileId) {
+        fileId = path.basename(urlObj.pathname, '.zip');
     }
-});
 
+    if (!activeZipTasks[fileId]) activeZipTasks[fileId] = [];
+    let isFirst = activeZipTasks[fileId].length === 0;
+
+    const downloadPromise = new Promise((resolve, reject) => {
+        activeZipTasks[fileId].push({ resolve, reject, url, gameType, installId });
+    });
+
+    if (isFirst) {
+        (async () => {
+            const tempPath = path.join(app.getPath('temp'), `${fileId}.zip`);
+            try {
+                const agent = new https.Agent({ rejectUnauthorized: false });
+                const res = await fetch(url, {
+                    headers: {
+                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) SporeNEXTLauncher'
+                    },
+                    agent
+                });
+                if (!res.ok) throw new Error('No se pudo descargar el mod: ' + res.status + ' ' + res.statusText);
+
+                const total = Number(res.headers.get('content-length')) || 0;
+                let downloaded = 0;
+                const fileStream = fs.createWriteStream(tempPath);
+
+                await new Promise((resProm, rejProm) => {
+                    res.body.on('data', (chunk) => {
+                        downloaded += chunk.length;
+                        if (mainWindow && total) {
+                            mainWindow.webContents.send('mod-download-progress', {
+                                modId: (
+                                    fileId === 'HDTextures' ? 'HDTextures' :
+                                        fileId === '4gbpatch' ? '4gbpatch' :
+                                            fileId === 'Unlock60fps' ? 'unlock60fps' :
+                                                fileId
+                                ),
+                                gameType,
+                                downloaded,
+                                total,
+                                percent: Math.round((downloaded / total) * 100),
+                                installId: activeZipTasks[fileId][0]?.installId
+                            });
+                        }
+
+                    });
+                    res.body.pipe(fileStream);
+                    fileStream.on('finish', () => {
+                        if (mainWindow && total) {
+                            for (const task of activeZipTasks[fileId]) {
+                                mainWindow.webContents.send('mod-download-progress', {
+                                    modId: (
+                                        fileId === 'HDTextures' ? 'HDTextures' :
+                                            fileId === '4gbpatch' ? '4gbpatch' :
+                                                fileId === 'Unlock60fps' ? 'unlock60fps' :
+                                                    fileId
+                                    ),
+                                    gameType,
+                                    downloaded: total,
+                                    total,
+                                    percent: 100,
+                                    installId: task.installId
+                                });
+                            }
+                        }
+                        resProm(tempPath);
+                    });
+                    fileStream.on('error', (err) => {
+                        rejProm(err);
+                    });
+                });
+
+                while (activeZipTasks[fileId].length > 0) {
+                    const { resolve } = activeZipTasks[fileId][0];
+                    resolve(tempPath);
+                    activeZipTasks[fileId].shift();
+                }
+            } catch (err) {
+                while (activeZipTasks[fileId].length > 0) {
+                    const { reject } = activeZipTasks[fileId][0];
+                    reject(err);
+                    activeZipTasks[fileId].shift();
+                }
+            }
+            delete activeZipTasks[fileId];
+        })();
+    }
+
+    return downloadPromise;
+});
 
 function findAllPackages(dir) {
     let results = [];
@@ -241,44 +281,85 @@ function findAllPackages(dir) {
     return results;
 }
 
+async function findSporeInstallations() {
+    const regKeys = [
+        { hive: WinReg.HKLM, key: '\\SOFTWARE\\Wow6432Node\\Electronic Arts\\SPORE', type: 'base' },
+        { hive: WinReg.HKLM, key: '\\SOFTWARE\\Electronic Arts\\SPORE', type: 'base' },
+        { hive: WinReg.HKLM, key: '\\SOFTWARE\\Wow6432Node\\Electronic Arts\\SPORE_EP1', type: 'ga' },
+        { hive: WinReg.HKLM, key: '\\SOFTWARE\\Electronic Arts\\SPORE_EP1', type: 'ga' }
+    ];
+    let installs = [];
+    for (const reg of regKeys) {
+        try {
+            const regKey = new WinReg({ hive: reg.hive, key: reg.key });
+            const datadir = await new Promise(resolve => {
+                regKey.get('datadir', (err, item) => {
+                    if (!err && item && item.value) resolve(item.value.replace(/"/g, ''));
+                    else resolve(null);
+                });
+            });
+            if (datadir && fs.existsSync(datadir)) {
+                installs.push({ type: reg.type, datadir });
+            }
+        } catch { }
+    }
+    return installs;
+}
 
-ipcMain.handle('install-hdtextures', async (_e, extractedPath, zipPath) => {
-    let configDir = await findSporeConfigDir();
-    if (!configDir) throw new Error('No se pudo encontrar la carpeta de configuración de Spore.');
+ipcMain.handle('get-spore-installations', async () => {
+    return await findSporeInstallations();
+});
 
+ipcMain.handle('has-spore-base', async () => {
+    const installs = await findSporeInstallations();
+    return installs.some(i => i.type === 'base');
+});
+ipcMain.handle('has-spore-ga', async () => {
+    const installs = await findSporeInstallations();
+    return installs.some(i => i.type === 'ga');
+});
 
-    let configDirNormalized = configDir.replace(/\\/g, '/').replace(/\/+$/, '').toLowerCase();
-    let dataEP1;
-    if (configDirNormalized.endsWith('/dataep1')) {
-        dataEP1 = configDir;
-    } else if (configDirNormalized.endsWith('/config')) {
-        dataEP1 = path.dirname(configDir);
-    } else {
-        const candidate = path.join(configDir, 'DataEP1');
-        if (fs.existsSync(candidate)) {
-            dataEP1 = candidate;
+// --------- MODS: Install, Verify, Uninstall ---------
+
+// HD Textures
+ipcMain.handle('install-hdtextures', async (_e, extractedPath, zipPath, gameType, installId) => {
+    const installs = await findSporeInstallations();
+    const install = installs.find(i => i.type === gameType);
+    if (!install) throw new Error('No se encontró la instalación de Spore seleccionada.');
+
+    let dataDir;
+    if (gameType === 'ga') {
+        if (install.datadir.toLowerCase().endsWith('dataep1')) {
+            dataDir = install.datadir;
         } else {
-            throw new Error('No se pudo encontrar la carpeta DataEP1.');
+            dataDir = path.join(path.dirname(install.datadir), 'DataEP1');
+        }
+    } else {
+        if (install.datadir.toLowerCase().endsWith('data')) {
+            dataDir = install.datadir;
+        } else {
+            dataDir = path.join(path.dirname(install.datadir), 'Data');
         }
     }
 
-    if (!fs.existsSync(dataEP1)) fs.mkdirSync(dataEP1, { recursive: true });
-
+    if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
 
     const files = findAllPackages(extractedPath);
     const total = files.length;
     let copied = 0;
 
     for (const src of files) {
-        const dest = path.join(dataEP1, path.basename(src));
+        const dest = path.join(dataDir, path.basename(src));
         fs.copyFileSync(src, dest);
         copied++;
         if (mainWindow) {
             mainWindow.webContents.send('mod-install-progress', {
                 modId: 'HDTextures',
+                gameType,
                 copied,
                 total,
-                percent: Math.round((copied / total) * 100)
+                percent: Math.round((copied / total) * 100),
+                installId
             });
         }
     }
@@ -291,6 +372,258 @@ ipcMain.handle('install-hdtextures', async (_e, extractedPath, zipPath) => {
     return true;
 });
 
+ipcMain.handle('is-hdtextures-installed', async (_e, gameType) => {
+    const installs = await findSporeInstallations();
+    const install = installs.find(i => i.type === gameType);
+    if (!install) return false;
+    let dataDir;
+    if (gameType === 'ga') {
+        dataDir = install.datadir.toLowerCase().endsWith('dataep1')
+            ? install.datadir
+            : path.join(path.dirname(install.datadir), 'DataEP1');
+    } else {
+        dataDir = install.datadir.toLowerCase().endsWith('data')
+            ? install.datadir
+            : path.join(path.dirname(install.datadir), 'Data');
+    }
+    const files = [
+        'MOD_HD_Water.package',
+        'MOD_HD_Textures3.package',
+        'MOD_HD_Textures2.package',
+        'MOD_HD_Textures1.package',
+        'MOD_HD_Planet-textures.package',
+        'MOD_HD_Parts.package',
+        'MOD_HD_Particles.package',
+        'MOD_HD_Meshes2.package',
+        'MOD_HD_Meshes.package',
+        'MOD_HD_LOD-High.package',
+        'MOD_HD_Ground.package',
+        'MOD_HD_Galaxy.package',
+        'MOD_HD_Empire-backgrounds.package',
+        'MOD_HD_Editor-background.package',
+        'MOD_HD_Decals.package',
+        'MOD_HD_Background.package'
+    ];
+    return files.every(file => fs.existsSync(path.join(dataDir, file)));
+});
+
+ipcMain.handle('uninstall-hdtextures', async (_e, gameType) => {
+    const installs = await findSporeInstallations();
+    const install = installs.find(i => i.type === gameType);
+    if (!install) return false;
+    let dataDir;
+    if (gameType === 'ga') {
+        dataDir = install.datadir.toLowerCase().endsWith('dataep1')
+            ? install.datadir
+            : path.join(path.dirname(install.datadir), 'DataEP1');
+    } else {
+        dataDir = install.datadir.toLowerCase().endsWith('data')
+            ? install.datadir
+            : path.join(path.dirname(install.datadir), 'Data');
+    }
+    const files = [
+        'MOD_HD_Water.package',
+        'MOD_HD_Textures3.package',
+        'MOD_HD_Textures2.package',
+        'MOD_HD_Textures1.package',
+        'MOD_HD_Planet-textures.package',
+        'MOD_HD_Parts.package',
+        'MOD_HD_Particles.package',
+        'MOD_HD_Meshes2.package',
+        'MOD_HD_Meshes.package',
+        'MOD_HD_LOD-High.package',
+        'MOD_HD_Ground.package',
+        'MOD_HD_Galaxy.package',
+        'MOD_HD_Empire-backgrounds.package',
+        'MOD_HD_Editor-background.package',
+        'MOD_HD_Decals.package',
+        'MOD_HD_Background.package'
+    ];
+    let removed = false;
+    for (const file of files) {
+        const filePath = path.join(dataDir, file);
+        try {
+            if (fs.existsSync(filePath)) {
+                fs.unlinkSync(filePath);
+                removed = true;
+            }
+        } catch (err) { }
+    }
+    return removed;
+});
+
+// 4GB Patch
+ipcMain.handle('install-4gbpatch', async (_e, extractedPath, zipPath, gameType) => {
+    const installs = await findSporeInstallations();
+    const install = installs.find(i => i.type === gameType);
+    if (!install) throw new Error('No se encontró la instalación de Spore seleccionada.');
+
+    let binDir;
+    if (gameType === 'ga') {
+        binDir = path.join(path.dirname(install.datadir), 'SporebinEP1');
+    } else {
+        binDir = path.join(path.dirname(install.datadir), 'Sporebin');
+    }
+    if (!fs.existsSync(binDir)) throw new Error('No se encontró la carpeta Sporebin.');
+
+    const originalExe = path.join(binDir, 'SporeApp.exe');
+    const backupExe = path.join(binDir, 'SporeApp-backup.exe');
+
+    if (fs.existsSync(originalExe) && !fs.existsSync(backupExe)) {
+        fs.copyFileSync(originalExe, backupExe);
+    }
+
+    const patchExe = fs.readdirSync(extractedPath).find(f => f.toLowerCase() === 'sporeapp.exe');
+    if (!patchExe) throw new Error('No se encontró SporeApp.exe en el parche.');
+    const patchExePath = path.join(extractedPath, patchExe);
+
+    fs.copyFileSync(patchExePath, originalExe);
+
+    if (mainWindow) {
+        mainWindow.webContents.send('mod-install-progress', {
+            modId: '4gbpatch',
+            gameType,
+            copied: 1,
+            total: 1,
+            percent: 100
+        });
+    }
+
+    try {
+        if (zipPath && fs.existsSync(zipPath)) fs.unlinkSync(zipPath);
+        if (extractedPath && fs.existsSync(extractedPath)) fs.rmSync(extractedPath, { recursive: true, force: true });
+    } catch { }
+
+    return true;
+});
+
+function fileHash(filePath) {
+    const data = fs.readFileSync(filePath);
+    return crypto.createHash('sha256').update(data).digest('hex');
+}
+
+ipcMain.handle('is-4gbpatch-installed', async (_e, gameType) => {
+    const installs = await findSporeInstallations();
+    const install = installs.find(i => i.type === gameType);
+    if (!install) return false;
+    let binDir;
+    if (gameType === 'ga') {
+        binDir = path.join(path.dirname(install.datadir), 'SporebinEP1');
+    } else {
+        binDir = path.join(path.dirname(install.datadir), 'Sporebin');
+    }
+    const originalExe = path.join(binDir, 'SporeApp.exe');
+    const backupExe = path.join(binDir, 'SporeApp-backup.exe');
+    if (!fs.existsSync(backupExe) || !fs.existsSync(originalExe)) return false;
+    return fileHash(originalExe) !== fileHash(backupExe);
+});
+
+ipcMain.handle('uninstall-4gbpatch', async (_e, gameType) => {
+    const installs = await findSporeInstallations();
+    const install = installs.find(i => i.type === gameType);
+    if (!install) return false;
+    let binDir;
+    if (gameType === 'ga') {
+        binDir = path.join(path.dirname(install.datadir), 'SporebinEP1');
+    } else {
+        binDir = path.join(path.dirname(install.datadir), 'Sporebin');
+    }
+    const originalExe = path.join(binDir, 'SporeApp.exe');
+    const backupExe = path.join(binDir, 'SporeApp-backup.exe');
+    try {
+        if (fs.existsSync(originalExe)) fs.unlinkSync(originalExe);
+        if (fs.existsSync(backupExe)) {
+            fs.renameSync(backupExe, originalExe);
+            return true;
+        }
+    } catch { }
+    return false;
+});
+
+// 60FPS Unlocker
+ipcMain.handle('install-sporemod', async (_e, extractedPath, zipPath, gameType) => {
+    const installs = await findSporeInstallations();
+    const install = installs.find(i => i.type === gameType);
+    if (!install) throw new Error('No se encontró la instalación de Spore seleccionada.');
+
+    let configDir;
+    if (gameType === 'ga') {
+        configDir = path.join(path.dirname(install.datadir), 'DataEP1', 'Config');
+    } else {
+        configDir = path.join(path.dirname(install.datadir), 'Data', 'Config');
+    }
+    if (!fs.existsSync(configDir)) fs.mkdirSync(configDir, { recursive: true });
+
+    const files = fs.readdirSync(extractedPath);
+    const total = files.length;
+    let copied = 0;
+
+    for (const file of files) {
+        const src = path.join(extractedPath, file);
+        const dest = path.join(configDir, file);
+        if (fs.statSync(src).isFile()) {
+            fs.copyFileSync(src, dest);
+            copied++;
+            if (mainWindow) {
+                mainWindow.webContents.send('mod-install-progress', {
+                    modId: 'unlock60fps',
+                    gameType,
+                    copied,
+                    total,
+                    percent: Math.round((copied / total) * 100)
+                });
+            }
+        }
+    }
+
+    try {
+        if (zipPath && fs.existsSync(zipPath)) fs.unlinkSync(zipPath);
+        if (extractedPath && fs.existsSync(extractedPath)) fs.rmSync(extractedPath, { recursive: true, force: true });
+    } catch (e) { }
+
+    return true;
+});
+
+ipcMain.handle('is-unlock60fps-installed', async (_e, gameType) => {
+    const installs = await findSporeInstallations();
+    const install = installs.find(i => i.type === gameType);
+    if (!install) return false;
+    let configDir;
+    if (gameType === 'ga') {
+        configDir = path.join(path.dirname(install.datadir), 'DataEP1', 'Config');
+    } else {
+        configDir = path.join(path.dirname(install.datadir), 'Data', 'Config');
+    }
+    const configManager = path.join(configDir, 'ConfigManager.txt');
+    const properties = path.join(configDir, 'Properties.txt');
+    return fs.existsSync(configManager) && fs.existsSync(properties);
+});
+
+ipcMain.handle('uninstall-unlock60fps', async (_e, gameType) => {
+    const installs = await findSporeInstallations();
+    const install = installs.find(i => i.type === gameType);
+    if (!install) return false;
+    let configDir;
+    if (gameType === 'ga') {
+        configDir = path.join(path.dirname(install.datadir), 'DataEP1', 'Config');
+    } else {
+        configDir = path.join(path.dirname(install.datadir), 'Data', 'Config');
+    }
+    const files = ['ConfigManager.txt', 'Properties.txt'];
+    let removed = false;
+    for (const file of files) {
+        const filePath = path.join(configDir, file);
+        try {
+            if (fs.existsSync(filePath)) {
+                fs.unlinkSync(filePath);
+                removed = true;
+            }
+        } catch (err) { }
+    }
+    return removed;
+});
+
+// --------- UNZIP ---------
 ipcMain.handle('unzip-mod', async (_e, zipPath) => {
     const extractPath = zipPath.replace(/\.zip$/i, '');
     return await new Promise((resolve, reject) => {
@@ -309,8 +642,66 @@ ipcMain.handle('unzip-mod', async (_e, zipPath) => {
     });
 });
 
+ipcMain.handle('unzip-mod-to', async (_e, zipPath, extractPath) => {
+    return await new Promise((resolve, reject) => {
+        const child = fork(path.join(__dirname, 'unzip-child.js'), [zipPath, extractPath], { stdio: ['inherit', 'inherit', 'inherit', 'ipc'] });
+        child.on('message', (msg) => {
+            if (msg.progress !== undefined && mainWindow) {
+                mainWindow.webContents.send('mod-unzip-progress', {
+                    zipPath,
+                    extractPath,
+                    percent: msg.progress
+                });
+            }
+            if (msg.success) {
+                resolve(extractPath);
+            } else if (msg.error) {
+                reject(new Error(msg.error || 'Error al descomprimir'));
+            }
+        });
+        child.on('error', (err) => reject(err));
+        child.on('exit', (code) => {
+            if (code !== 0) reject(new Error('Error al descomprimir (exit code ' + code + ')'));
+        });
+    });
+});
+
+// --------- LAUNCH SPORE ---------
+
+async function findSporeBaseExe() {
+    const regKeys = [
+        { hive: WinReg.HKLM, key: '\\SOFTWARE\\Wow6432Node\\Electronic Arts\\SPORE' },
+        { hive: WinReg.HKLM, key: '\\SOFTWARE\\Electronic Arts\\SPORE' }
+    ];
+    for (const reg of regKeys) {
+        try {
+            const regKey = new WinReg({ hive: reg.hive, key: reg.key });
+            const datadir = await new Promise(resolve => {
+                regKey.get('datadir', (err, item) => {
+                    if (!err && item && item.value) resolve(item.value.replace(/"/g, ''));
+                    else resolve(null);
+                });
+            });
+            if (datadir) {
+                const baseDir = datadir.replace(/\\Data\\?$/i, '');
+                const exePath = path.join(baseDir, 'Sporebin', 'SporeApp.exe');
+                if (fs.existsSync(exePath)) return exePath;
+            }
+        } catch { }
+    }
+    return null;
+}
+
+ipcMain.handle('launch-spore-base', async () => {
+    try {
+        exec('start steam://run/17390');
+        return true;
+    } catch (e) {
+        return false;
+    }
+});
+
 async function findSporeExe() {
-    const WinReg = (await import('winreg')).default;
     const regKeys = [
         { hive: WinReg.HKLM, key: '\\SOFTWARE\\Wow6432Node\\Electronic Arts\\SPORE_EP1' },
         { hive: WinReg.HKLM, key: '\\SOFTWARE\\Electronic Arts\\SPORE_EP1' }
@@ -345,367 +736,24 @@ ipcMain.handle('launch-spore', async () => {
     }
 });
 
-async function findSporeConfigDir() {
-    const regKeys = [
-        { hive: WinReg.HKLM, key: '\\SOFTWARE\\Wow6432Node\\Electronic Arts\\SPORE_EP1' },
-        { hive: WinReg.HKLM, key: '\\SOFTWARE\\Electronic Arts\\SPORE_EP1' }
-    ];
-    for (const reg of regKeys) {
-        try {
-            const regKey = new WinReg({
-                hive: reg.hive,
-                key: reg.key
-            });
-            const getVal = (name) => new Promise((resolve) => {
-                regKey.get(name, (err, item) => {
-                    if (err || !item) return resolve(null);
-                    resolve(item.value.replace(/"/g, ''));
-                });
-            });
-            const values = await Promise.all([getVal('datadir'), getVal('InstallLoc'), getVal('Install Dir')]);
-            const [datadir, installLoc, installDir] = values;
-            if (datadir && fs.existsSync(datadir)) {
-                return datadir;
-            }
-            const basePath = installLoc || installDir;
-            if (basePath) {
-                const configPath = path.join(basePath, 'DataEP1', 'Config');
-                if (fs.existsSync(configPath)) {
-                    return configPath;
-                }
-            }
-        } catch (e) {
-        }
-    }
-    return null;
-}
-
-
-function fileHash(filePath) {
-    const data = fs.readFileSync(filePath);
-    return crypto.createHash('sha256').update(data).digest('hex');
-}
-
-
-ipcMain.handle('install-4gbpatch', async (_e, extractedPath, zipPath) => {
-    const regKeys = [
-        { hive: WinReg.HKLM, key: '\\SOFTWARE\\Wow6432Node\\Electronic Arts\\SPORE_EP1' },
-        { hive: WinReg.HKLM, key: '\\SOFTWARE\\Electronic Arts\\SPORE_EP1' }
-    ];
-    let installDir = null;
-    for (const reg of regKeys) {
-        try {
-            const regKey = new WinReg({ hive: reg.hive, key: reg.key });
-            installDir = await new Promise(resolve => {
-                regKey.get('datadir', (err, item) => {
-                    if (!err && item && fs.existsSync(path.dirname(item.value))) {
-                        return resolve(path.dirname(item.value));
-                    }
-                    regKey.get('Install Dir', (err2, item2) => {
-                        if (!err2 && item2 && fs.existsSync(item2.value)) {
-                            return resolve(item2.value.replace(/"/g, ''));
-                        }
-                        resolve(null);
-                    });
-                });
-            });
-            if (installDir && fs.existsSync(installDir)) break;
-        } catch { }
-    }
-    if (!installDir) throw new Error('No se pudo encontrar la carpeta de instalación de Spore.');
-
-    const sporebinEP1 = path.join(installDir, 'SporebinEP1');
-    if (!fs.existsSync(sporebinEP1)) throw new Error('No se encontró la carpeta SporebinEP1.');
-
-    const originalExe = path.join(sporebinEP1, 'SporeApp.exe');
-    const backupExe = path.join(sporebinEP1, 'SporeApp-backup.exe');
-
-    if (fs.existsSync(originalExe) && !fs.existsSync(backupExe)) {
-        fs.copyFileSync(originalExe, backupExe);
-    }
-
-    const patchExe = fs.readdirSync(extractedPath).find(f => f.toLowerCase() === 'sporeapp.exe');
-    if (!patchExe) throw new Error('No se encontró SporeApp.exe en el parche.');
-    const patchExePath = path.join(extractedPath, patchExe);
-
-    fs.copyFileSync(patchExePath, originalExe);
-
-    if (mainWindow) {
-        mainWindow.webContents.send('mod-install-progress', {
-            modId: '4gbpatch',
-            copied: 1,
-            total: 1,
-            percent: 100
-        });
-    }
-
-    try {
-        if (zipPath && fs.existsSync(zipPath)) fs.unlinkSync(zipPath);
-        if (extractedPath && fs.existsSync(extractedPath)) fs.rmSync(extractedPath, { recursive: true, force: true });
-    } catch { }
-
-    return true;
-});
-
-
-ipcMain.handle('uninstall-4gbpatch', async () => {
-    const regKeys = [
-        { hive: WinReg.HKLM, key: '\\SOFTWARE\\Wow6432Node\\Electronic Arts\\SPORE_EP1' },
-        { hive: WinReg.HKLM, key: '\\SOFTWARE\\Electronic Arts\\SPORE_EP1' }
-    ];
-    let installDir = null;
-    for (const reg of regKeys) {
-        try {
-            const regKey = new WinReg({ hive: reg.hive, key: reg.key });
-            installDir = await new Promise(resolve => {
-                regKey.get('datadir', (err, item) => {
-                    if (!err && item && fs.existsSync(path.dirname(item.value))) {
-                        return resolve(path.dirname(item.value));
-                    }
-                    regKey.get('Install Dir', (err2, item2) => {
-                        if (!err2 && item2 && fs.existsSync(item2.value)) {
-                            return resolve(item2.value.replace(/"/g, ''));
-                        }
-                        resolve(null);
-                    });
-                });
-            });
-            if (installDir && fs.existsSync(installDir)) break;
-        } catch { }
-    }
-    if (!installDir) return false;
-    const sporebinEP1 = path.join(installDir, 'SporebinEP1');
-    const originalExe = path.join(sporebinEP1, 'SporeApp.exe');
-    const backupExe = path.join(sporebinEP1, 'SporeApp-backup.exe');
-
-    try {
-        if (fs.existsSync(originalExe)) fs.unlinkSync(originalExe);
-        if (fs.existsSync(backupExe)) {
-            fs.renameSync(backupExe, originalExe);
-            return true;
-        }
-    } catch { }
-    return false;
-});
-
-ipcMain.handle('is-4gbpatch-installed', async () => {
-    const regKeys = [
-        { hive: WinReg.HKLM, key: '\\SOFTWARE\\Wow6432Node\\Electronic Arts\\SPORE_EP1' },
-        { hive: WinReg.HKLM, key: '\\SOFTWARE\\Electronic Arts\\SPORE_EP1' }
-    ];
-    let installDir = null;
-    for (const reg of regKeys) {
-        try {
-            const regKey = new WinReg({ hive: reg.hive, key: reg.key });
-            installDir = await new Promise(resolve => {
-                regKey.get('datadir', (err, item) => {
-                    if (!err && item && fs.existsSync(path.dirname(item.value))) {
-                        return resolve(path.dirname(item.value));
-                    }
-                    regKey.get('Install Dir', (err2, item2) => {
-                        if (!err2 && item2 && fs.existsSync(item2.value)) {
-                            return resolve(item2.value.replace(/"/g, ''));
-                        }
-                        resolve(null);
-                    });
-                });
-            });
-            if (installDir && fs.existsSync(installDir)) break;
-        } catch { }
-    }
-    if (!installDir) return false;
-    const sporebinEP1 = path.join(installDir, 'SporebinEP1');
-    const originalExe = path.join(sporebinEP1, 'SporeApp.exe');
-    const backupExe = path.join(sporebinEP1, 'SporeApp-backup.exe');
-    if (!fs.existsSync(backupExe) || !fs.existsSync(originalExe)) return false;
-
-
-    return fileHash(originalExe) !== fileHash(backupExe);
-});
-
-ipcMain.handle('install-sporemod', async (_e, extractedPath, zipPath) => {
-    let configDir = await findSporeConfigDir();
-    if (!configDir) throw new Error('No se pudo encontrar la carpeta de configuración de Spore.');
-
-    if (!configDir.toLowerCase().endsWith('config')) {
-        configDir = path.join(configDir, 'Config');
-    }
-    if (!fs.existsSync(configDir)) {
-        fs.mkdirSync(configDir, { recursive: true });
-    }
-
-    const files = fs.readdirSync(extractedPath);
-    const total = files.length;
-    let copied = 0;
-
-    for (const file of files) {
-        const src = path.join(extractedPath, file);
-        const dest = path.join(configDir, file);
-        if (fs.statSync(src).isFile()) {
-            fs.copyFileSync(src, dest);
-            copied++;
-            if (mainWindow) {
-                mainWindow.webContents.send('mod-install-progress', {
-                    modId: 'unlock60fps',
-                    copied,
-                    total,
-                    percent: Math.round((copied / total) * 100)
-                });
-            }
-        }
-    }
-
-    try {
-        if (zipPath && fs.existsSync(zipPath)) {
-            fs.unlinkSync(zipPath);
-        }
-        if (extractedPath && fs.existsSync(extractedPath)) {
-            fs.rmSync(extractedPath, { recursive: true, force: true });
-        }
-    } catch (e) {
-    }
-
-    return true;
-});
-
-ipcMain.handle('is-unlock60fps-installed', async () => {
-    let configDir = await findSporeConfigDir();
-    if (!configDir) return false;
-    if (!configDir.toLowerCase().endsWith('config')) {
-        configDir = path.join(configDir, 'Config');
-    }
-    const configManager = path.join(configDir, 'ConfigManager.txt');
-    const properties = path.join(configDir, 'Properties.txt');
-    return fs.existsSync(configManager) && fs.existsSync(properties);
-});
-
-ipcMain.handle('uninstall-unlock60fps', async () => {
-    let configDir = await findSporeConfigDir();
-    if (!configDir) return false;
-    if (!configDir.toLowerCase().endsWith('config')) {
-        configDir = path.join(configDir, 'Config');
-    }
-    const files = ['ConfigManager.txt', 'Properties.txt'];
-    let removed = false;
-    for (const file of files) {
-        const filePath = path.join(configDir, file);
-        try {
-            if (fs.existsSync(filePath)) {
-                fs.unlinkSync(filePath);
-                removed = true;
-            }
-        } catch (err) {
-        }
-    }
-
-    return removed;
-});
-
-
-ipcMain.handle('is-hdtextures-installed', async () => {
-    let configDir = await findSporeConfigDir();
-    if (!configDir) return false;
-
-    let configDirNormalized = configDir.replace(/\\/g, '/').replace(/\/+$/, '').toLowerCase();
-    let dataEP1;
-    if (configDirNormalized.endsWith('/config')) {
-        dataEP1 = path.dirname(configDir);
-    } else if (configDirNormalized.endsWith('/dataep1')) {
-        dataEP1 = configDir;
-    } else {
-        const candidate = path.join(configDir, 'DataEP1');
-        if (fs.existsSync(candidate)) {
-            dataEP1 = candidate;
-        } else {
-            return false;
-        }
-    }
-
-    const files = [
-        'MOD_HD_Water.package',
-        'MOD_HD_Textures3.package',
-        'MOD_HD_Textures2.package',
-        'MOD_HD_Textures1.package',
-        'MOD_HD_Planet-textures.package',
-        'MOD_HD_Parts.package',
-        'MOD_HD_Particles.package',
-        'MOD_HD_Meshes2.package',
-        'MOD_HD_Meshes.package',
-        'MOD_HD_LOD-High.package',
-        'MOD_HD_Ground.package',
-        'MOD_HD_Galaxy.package',
-        'MOD_HD_Empire-backgrounds.package',
-        'MOD_HD_Editor-background.package',
-        'MOD_HD_Decals.package',
-        'MOD_HD_Background.package'
-    ];
-
-    return files.every(file => fs.existsSync(path.join(dataEP1, file)));
-});
-
-
-ipcMain.handle('uninstall-hdtextures', async () => {
-    let configDir = await findSporeConfigDir();
-    if (!configDir) return false;
-
-    let configDirNormalized = configDir.replace(/\\/g, '/').replace(/\/+$/, '').toLowerCase();
-    let dataEP1;
-    if (configDirNormalized.endsWith('/config')) {
-        dataEP1 = path.dirname(configDir);
-    } else if (configDirNormalized.endsWith('/dataep1')) {
-        dataEP1 = configDir;
-    } else {
-        const candidate = path.join(configDir, 'DataEP1');
-        if (fs.existsSync(candidate)) {
-            dataEP1 = candidate;
-        } else {
-            return false;
-        }
-    }
-
-    const files = [
-        'MOD_HD_Water.package',
-        'MOD_HD_Textures3.package',
-        'MOD_HD_Textures2.package',
-        'MOD_HD_Textures1.package',
-        'MOD_HD_Planet-textures.package',
-        'MOD_HD_Parts.package',
-        'MOD_HD_Particles.package',
-        'MOD_HD_Meshes2.package',
-        'MOD_HD_Meshes.package',
-        'MOD_HD_LOD-High.package',
-        'MOD_HD_Ground.package',
-        'MOD_HD_Galaxy.package',
-        'MOD_HD_Empire-backgrounds.package',
-        'MOD_HD_Editor-background.package',
-        'MOD_HD_Decals.package',
-        'MOD_HD_Background.package'
-    ];
-    let removed = false;
-    for (const file of files) {
-        const filePath = path.join(dataEP1, file);
-        try {
-            if (fs.existsSync(filePath)) {
-                fs.unlinkSync(filePath);
-                removed = true;
-            }
-        } catch (err) { }
-    }
-    return removed;
-});
-
+// --------- UNINSTALL ALL MODS ---------
 ipcMain.handle('uninstall-all-mods', async () => {
     try {
         let removedAny = false;
-        const modsPath = path.join(app.getPath('userData'), 'mods');
-        if (fs.existsSync(modsPath)) {
-            fs.rmSync(modsPath, { recursive: true, force: true });
-            removedAny = true;
-        }
-
-        const configDir = await findSporeConfigDir();
-        if (configDir) {
-            const hdPackages = [
+        const installs = await findSporeInstallations();
+        for (const install of installs) {
+            // HD Textures
+            let dataDir;
+            if (install.type === 'ga') {
+                dataDir = install.datadir.toLowerCase().endsWith('dataep1')
+                    ? install.datadir
+                    : path.join(path.dirname(install.datadir), 'DataEP1');
+            } else {
+                dataDir = install.datadir.toLowerCase().endsWith('data')
+                    ? install.datadir
+                    : path.join(path.dirname(install.datadir), 'Data');
+            }
+            const hdFiles = [
                 'MOD_HD_Water.package',
                 'MOD_HD_Textures3.package',
                 'MOD_HD_Textures2.package',
@@ -723,74 +771,53 @@ ipcMain.handle('uninstall-all-mods', async () => {
                 'MOD_HD_Decals.package',
                 'MOD_HD_Background.package'
             ];
-            let dataEP1;
-            if (configDir.toLowerCase().endsWith('dataep1')) {
-                dataEP1 = configDir;
-            } else if (configDir.toLowerCase().endsWith('config')) {
-                dataEP1 = path.dirname(configDir);
+            for (const file of hdFiles) {
+                const filePath = path.join(dataDir, file);
+                if (fs.existsSync(filePath)) {
+                    fs.unlinkSync(filePath);
+                    removedAny = true;
+                }
+            }
+            // 60fps unlocker
+            let configDir;
+            if (install.type === 'ga') {
+                configDir = path.join(path.dirname(install.datadir), 'DataEP1', 'Config');
             } else {
-                dataEP1 = path.join(path.dirname(configDir), 'DataEP1');
+                configDir = path.join(path.dirname(install.datadir), 'Data', 'Config');
             }
-            if (fs.existsSync(dataEP1)) {
-                hdPackages.forEach(file => {
-                    const filePath = path.join(dataEP1, file);
-                    if (fs.existsSync(filePath)) {
-                        fs.unlinkSync(filePath);
-                        removedAny = true;
-                    }
-                });
+            const unlockerFiles = ['ConfigManager.txt', 'Properties.txt'];
+            for (const file of unlockerFiles) {
+                const filePath = path.join(configDir, file);
+                if (fs.existsSync(filePath)) {
+                    fs.unlinkSync(filePath);
+                    removedAny = true;
+                }
             }
-
-            const configPath = configDir.toLowerCase().endsWith('config') ? configDir : path.join(configDir, 'Config');
-            if (fs.existsSync(configPath)) {
-                ['ConfigManager.txt', 'Properties.txt'].forEach(file => {
-                    const filePath = path.join(configPath, file);
-                    if (fs.existsSync(filePath)) {
-                        fs.unlinkSync(filePath);
-                        removedAny = true;
-                    }
-                });
+            // 4GB Patch
+            let binDir;
+            if (install.type === 'ga') {
+                binDir = path.join(path.dirname(install.datadir), 'SporebinEP1');
+            } else {
+                binDir = path.join(path.dirname(install.datadir), 'Sporebin');
             }
-
-            const regKeys = [
-                { hive: WinReg.HKLM, key: '\\SOFTWARE\\Wow6432Node\\Electronic Arts\\SPORE_EP1' },
-                { hive: WinReg.HKLM, key: '\\SOFTWARE\\Electronic Arts\\SPORE_EP1' }
-            ];
-            let installDir = null;
-            for (const reg of regKeys) {
-                try {
-                    const regKey = new WinReg({ hive: reg.hive, key: reg.key });
-                    installDir = await new Promise(resolve => {
-                        regKey.get('datadir', (err, item) => {
-                            if (!err && item && fs.existsSync(path.dirname(item.value))) {
-                                return resolve(path.dirname(item.value));
-                            }
-                            regKey.get('Install Dir', (err2, item2) => {
-                                if (!err2 && item2 && fs.existsSync(item2.value)) {
-                                    return resolve(item2.value.replace(/"/g, ''));
-                                }
-                                resolve(null);
-                            });
-                        });
-                    });
-                    if (installDir && fs.existsSync(installDir)) break;
-                } catch { }
-            }
-            if (installDir) {
-                const sporebinEP1 = path.join(installDir, 'SporebinEP1');
-                const originalExe = path.join(sporebinEP1, 'SporeApp.exe');
-                const backupExe = path.join(sporebinEP1, 'SporeApp-backup.exe');
-                try {
-                    if (fs.existsSync(originalExe)) {
-                        fs.unlinkSync(originalExe);
-                        removedAny = true;
-                    }
-                    if (fs.existsSync(backupExe)) {
-                        fs.renameSync(backupExe, originalExe);
-                        removedAny = true;
-                    }
-                } catch { }
-            }
+            const originalExe = path.join(binDir, 'SporeApp.exe');
+            const backupExe = path.join(binDir, 'SporeApp-backup.exe');
+            try {
+                if (fs.existsSync(originalExe)) {
+                    fs.unlinkSync(originalExe);
+                    removedAny = true;
+                }
+                if (fs.existsSync(backupExe)) {
+                    fs.renameSync(backupExe, originalExe);
+                    removedAny = true;
+                }
+            } catch { }
+        }
+        // Remove user mods folder
+        const modsPath = path.join(app.getPath('userData'), 'mods');
+        if (fs.existsSync(modsPath)) {
+            fs.rmSync(modsPath, { recursive: true, force: true });
+            removedAny = true;
         }
         return removedAny;
     } catch (err) {
