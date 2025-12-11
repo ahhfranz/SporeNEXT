@@ -1,6 +1,5 @@
 let currentTranslations = {}, newVersionAvailable = null;
 
-// Limpia listeners de progreso de todos los botones de un mod
 function cleanupListeners(btns) {
     btns.forEach(b => {
         if (b.downloadListener) {
@@ -19,7 +18,6 @@ function cleanupListeners(btns) {
     });
 }
 
-// Botones de filtro de mods
 document.addEventListener('DOMContentLoaded', function () {
     const filterButtons = document.querySelectorAll('.filter-btn');
     const modRows = document.querySelectorAll('.mods-table tbody tr');
@@ -46,7 +44,6 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 });
 
-// Configura los botones de cada mod
 function setupModButton(modId, options) {
     const btns = document.querySelectorAll(
         `.download-mod-spore-btn[data-mod-id="${modId}"], .download-mod-sporega-btn[data-mod-id="${modId}"]`
@@ -98,7 +95,6 @@ function setupModButton(modId, options) {
         btn.currentInstallId = null;
 
         btn.onclick = async (e) => {
-            // Limpia listeners de TODOS los botones de este mod (base y GA)
             cleanupListeners(btns);
 
             e.stopPropagation();
@@ -154,10 +150,8 @@ function setupModButton(modId, options) {
 
                 btn.currentInstallId = Math.random().toString(36).slice(2);
 
-                // Elimina listeners viejos antes de agregar nuevos
                 if (btn.downloadListener) window.electronAPI.removeModDownloadProgress(btn.downloadListener);
                 btn.downloadListener = (progress) => {
-                    // Solo actualiza si este botón está oculto (es el que está instalando)
                     if (progress.modId !== modId) return;
                     if (progress.gameType !== gameType) return;
                     if (progress.installId && progress.installId !== btn.currentInstallId) return;
@@ -224,7 +218,6 @@ function setupModButton(modId, options) {
     });
 }
 
-// Configura todos los mods
 async function updateModButtons() {
     setupModButton('unlock60fps', {
         isInstalled: async (gameType) => window.electronAPI.isUnlock60fpsInstalled(gameType),
@@ -252,7 +245,6 @@ async function updateModButtons() {
     });
 }
 
-// Splash y eventos principales
 window.addEventListener('DOMContentLoaded', async () => {
     const splash = document.getElementById('splash-screen');
     document.body.classList.add('transparent-launcher');
@@ -307,7 +299,6 @@ window.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
-    // Settings modal
     const settingsModal = document.getElementById('settings-modal');
     const settingsModalContent = settingsModal?.querySelector('.mods-modal-content');
     document.querySelector('.footer-settings')?.addEventListener('click', () => {
@@ -334,7 +325,6 @@ window.addEventListener('DOMContentLoaded', async () => {
         }, 250);
     });
 
-    // Mods modal
     const modsModal = document.getElementById('mods-modal');
     const modsModalContent = modsModal.querySelector('.mods-modal-content');
     document.querySelector('.footer-item img[alt="Install Mods"]')?.parentElement.addEventListener('click', () => {
@@ -380,7 +370,6 @@ window.addEventListener('DOMContentLoaded', async () => {
         if (!await window.electronAPI.launchSporeBase()) alert(currentTranslations.sporeLaunchError);
     });
 
-    // Idioma
     const langSelect = document.getElementById('lang-select');
     if (langSelect) {
         langSelect.addEventListener('change', async () => {
@@ -396,7 +385,6 @@ window.addEventListener('DOMContentLoaded', async () => {
     }
 });
 
-// Traducción
 async function loadLocale(lang) {
     const localePath = lang === 'es' ? 'locales/es.json' : 'locales/en.json';
     const response = await fetch(localePath);
@@ -437,7 +425,6 @@ async function loadLocale(lang) {
     }
 }
 
-// Actualización launcher
 window.electronAPI.onUpdateAvailable((_, version) => {
     newVersionAvailable = version;
     const updatedTextEl = document.querySelector('[data-i18n="updatedText"]');
@@ -457,7 +444,6 @@ window.electronAPI.onUpdateDownloaded?.(() => {
     }
 });
 
-// Error de descarga
 if (window.require) {
     const { ipcRenderer } = window.require('electron');
     ipcRenderer.on('download-mod-error', (_event, message) => {
@@ -465,7 +451,6 @@ if (window.require) {
     });
 }
 
-// Desinstalar todos los mods
 document.getElementById('extra-action-btn')?.addEventListener('click', async () => {
     if (confirm(currentTranslations.uninstallAllConfirm || "¿Seguro que quieres desinstalar todos los mods?")) {
         const success = await window.electronAPI.uninstallAllMods();
