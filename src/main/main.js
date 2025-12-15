@@ -1128,4 +1128,4 @@ ipcMain.handle('uninstall-sporemodapi-mod', async (_e, modId) => {
     }
 
     return removedAny;
-});
+}); 

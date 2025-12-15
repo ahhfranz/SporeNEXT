@@ -42,7 +42,7 @@
         "dll": "EnhancedColorPicker.dll",
         "package": "EnhancedColorPicker.package",
         "sporemod": "EnhancedColorPicker.sporemod",
-        "installer": "Spore ModAPI Easy Installer.exe"
+        "installer": "Spore ModAPI Easy Installer.exe "
     },
     {
         "id": "defensiveshipsinplayercolonies",
