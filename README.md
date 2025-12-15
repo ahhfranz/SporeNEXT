@@ -54,3 +54,6 @@ This application was developed **non-commercially**, as a personal project to:
 Contributions are welcome! Feel free to fork the repository, submit issues, or suggest improvements via pull requests.
 
 ---
+
+![Image1](https://i.imgur.com/U09EO9j.png)
+![Image1](https://i.imgur.com/KWR2Vnu.png)
