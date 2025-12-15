@@ -35,13 +35,17 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         });
     });
-    document.body.addEventListener('click', function (e) {
-        const target = e.target.closest('a');
-        if (target && target.closest('.disclaimer-text')) {
-            e.preventDefault();
-            window.electronAPI.openExternal(target.href);
-        }
-    });
+
+    document.getElementById('filter-all')?.classList.add('active');
+});
+
+
+document.body.addEventListener('click', function (e) {
+    const target = e.target.closest('a');
+    if (target && target.closest('.disclaimer-text')) {
+        e.preventDefault();
+        window.electronAPI.openExternal(target.href);
+    }
 });
 
 function setupModButton(modId, options) {
@@ -96,6 +100,10 @@ function setupModButton(modId, options) {
 
         btn.onclick = async (e) => {
             cleanupListeners(btns);
+            document.querySelectorAll('.download-mod-spore-btn, .download-mod-sporega-btn').forEach(b => {
+                b.disabled = true;
+                b.classList.add('mod-download-disabled');
+            });
 
             e.stopPropagation();
             await updateState();
@@ -131,10 +139,20 @@ function setupModButton(modId, options) {
                     progressText.textContent = '';
                     await updateState();
                     cleanupListeners(btns);
+                    document.querySelectorAll('.download-mod-spore-btn, .download-mod-sporega-btn').forEach(b => {
+                        b.disabled = false;
+                        b.classList.remove('mod-download-disabled');
+                    });
                 }, 5100);
             } else {
                 const modUrl = btn.getAttribute('data-mod-url');
-                if (!modUrl) return;
+                if (!modUrl) {
+                    document.querySelectorAll('.download-mod-spore-btn, .download-mod-sporega-btn').forEach(b => {
+                        b.disabled = false;
+                        b.classList.remove('mod-download-disabled');
+                    });
+                    return;
+                }
                 if (progressFill) {
                     progressFill.style.display = 'block';
                     progressFill.style.width = '0%';
@@ -190,7 +208,28 @@ function setupModButton(modId, options) {
 
                     const extractDir = zipPath.replace(/\.zip$/i, `-${gameType}-${Date.now()}`);
                     extractedPath = await window.electronAPI.unzipModTo(zipPath, extractDir);
-                    await options.install(extractedPath, zipPath, gameType, btn.currentInstallId);
+                    try {
+                        await options.install(extractedPath, zipPath, gameType, btn.currentInstallId);
+                    } catch (err) {
+                        if (err && err.message && err.message.includes('instalación de mod en curso')) {
+                            alert('Ya hay una instalación de mod en curso. Espera a que termine antes de instalar otro.');
+                        } else {
+                            alert('Error al instalar el mod:\n' + (err.message || err));
+                        }
+                        if (progressFill) progressFill.style.width = '0%';
+                        progressText.textContent = '';
+                        btn.style.display = '';
+                        cleanupListeners(btns);
+                        setTimeout(() => {
+                            progressBar.style.display = 'none';
+                            progressText.textContent = '';
+                        }, 2000);
+                        document.querySelectorAll('.download-mod-spore-btn, .download-mod-sporega-btn').forEach(b => {
+                            b.disabled = false;
+                            b.classList.remove('mod-download-disabled');
+                        });
+                        return;
+                    }
                 } catch (e) {
                     if (progressFill) progressFill.style.width = '0%';
                     progressText.textContent = '';
@@ -200,6 +239,10 @@ function setupModButton(modId, options) {
                         progressBar.style.display = 'none';
                         progressText.textContent = '';
                     }, 2000);
+                    document.querySelectorAll('.download-mod-spore-btn, .download-mod-sporega-btn').forEach(b => {
+                        b.disabled = false;
+                        b.classList.remove('mod-download-disabled');
+                    });
                     return;
                 }
 
@@ -210,6 +253,10 @@ function setupModButton(modId, options) {
                     cleanupListeners(btns);
                     await updateState();
                     btn.style.display = '';
+                    document.querySelectorAll('.download-mod-spore-btn, .download-mod-sporega-btn').forEach(b => {
+                        b.disabled = false;
+                        b.classList.remove('mod-download-disabled');
+                    });
                 }, 1000);
             }
         };
@@ -242,6 +289,70 @@ async function updateModButtons() {
         unzip: window.electronAPI.unzipMod,
         install: async (extractedPath, zipPath, gameType, installId) =>
             window.electronAPI.install4gbPatch(extractedPath, zipPath, gameType, installId)
+    });
+    setupModButton('AllSpicesMaxPrice', {
+        isInstalled: async (gameType) => window.electronAPI.isSporemodapiModInstalled('allspicesmaxprice'),
+        uninstall: async (gameType) => window.electronAPI.uninstallSporemodapiMod('allspicesmaxprice'),
+        download: (url, gameType, installId) => window.electronAPI.downloadModWithProgress(url, gameType, installId),
+        unzip: window.electronAPI.unzipMod,
+        install: async (extractedPath, zipPath, gameType, installId) =>
+            window.electronAPI.installSporemodapiMod('allspicesmaxprice', extractedPath, zipPath, gameType)
+    });
+    setupModButton('CrashFix', {
+        isInstalled: async (gameType) => window.electronAPI.isSporemodapiModInstalled('crashfix'),
+        uninstall: async (gameType) => window.electronAPI.uninstallSporemodapiMod('crashfix'),
+        download: (url, gameType, installId) => window.electronAPI.downloadModWithProgress(url, gameType, installId),
+        unzip: window.electronAPI.unzipMod,
+        install: async (extractedPath, zipPath, gameType, installId) =>
+            window.electronAPI.installSporemodapiMod('crashfix', extractedPath, zipPath, gameType)
+    });
+    setupModButton('OnlineFix', {
+        isInstalled: async (gameType) => window.electronAPI.isSporemodapiModInstalled('onlinefix'),
+        uninstall: async (gameType) => window.electronAPI.uninstallSporemodapiMod('onlinefix'),
+        download: (url, gameType, installId) => window.electronAPI.downloadModWithProgress(url, gameType, installId),
+        unzip: window.electronAPI.unzipMod,
+        install: async (extractedPath, zipPath, gameType, installId) =>
+            window.electronAPI.installSporemodapiMod('onlinefix', extractedPath, zipPath, gameType)
+    });
+    setupModButton('LongerProgressionInSpaceStage', {
+        isInstalled: async (gameType) => window.electronAPI.isSporemodapiModInstalled('longerprogressioninspacestage'),
+        uninstall: async (gameType) => window.electronAPI.uninstallSporemodapiMod('longerprogressioninspacestage'),
+        download: (url, gameType, installId) => window.electronAPI.downloadModWithProgress(url, gameType, installId),
+        unzip: window.electronAPI.unzipMod,
+        install: async (extractedPath, zipPath, gameType, installId) =>
+            window.electronAPI.installSporemodapiMod('longerprogressioninspacestage', extractedPath, zipPath, gameType)
+    });
+    setupModButton('SellAnyAmount', {
+        isInstalled: async (gameType) => window.electronAPI.isSporemodapiModInstalled('sellanyamount'),
+        uninstall: async (gameType) => window.electronAPI.uninstallSporemodapiMod('sellanyamount'),
+        download: (url, gameType, installId) => window.electronAPI.downloadModWithProgress(url, gameType, installId),
+        unzip: window.electronAPI.unzipMod,
+        install: async (extractedPath, zipPath, gameType, installId) =>
+            window.electronAPI.installSporemodapiMod('sellanyamount', extractedPath, zipPath, gameType)
+    });
+    setupModButton('EnhancedColorPicker', {
+        isInstalled: async (gameType) => window.electronAPI.isSporemodapiModInstalled('enhancedcolorpicker'),
+        uninstall: async (gameType) => window.electronAPI.uninstallSporemodapiMod('enhancedcolorpicker'),
+        download: (url, gameType, installId) => window.electronAPI.downloadModWithProgress(url, gameType, installId),
+        unzip: window.electronAPI.unzipMod,
+        install: async (extractedPath, zipPath, gameType, installId) =>
+            window.electronAPI.installSporemodapiMod('enhancedcolorpicker', extractedPath, zipPath, gameType)
+    });
+    setupModButton('DefensiveShipsInPlayerColonies', {
+        isInstalled: async (gameType) => window.electronAPI.isSporemodapiModInstalled('defensiveshipsinplayercolonies'),
+        uninstall: async (gameType) => window.electronAPI.uninstallSporemodapiMod('defensiveshipsinplayercolonies'),
+        download: (url, gameType, installId) => window.electronAPI.downloadModWithProgress(url, gameType, installId),
+        unzip: window.electronAPI.unzipMod,
+        install: async (extractedPath, zipPath, gameType, installId) =>
+            window.electronAPI.installSporemodapiMod('defensiveshipsinplayercolonies', extractedPath, zipPath, gameType)
+    });
+    setupModButton('TotallyNotACheater', {
+        isInstalled: async (gameType) => window.electronAPI.isSporemodapiModInstalled('totallynotacheater'),
+        uninstall: async (gameType) => window.electronAPI.uninstallSporemodapiMod('totallynotacheater'),
+        download: (url, gameType, installId) => window.electronAPI.downloadModWithProgress(url, gameType, installId),
+        unzip: window.electronAPI.unzipMod,
+        install: async (extractedPath, zipPath, gameType, installId) =>
+            window.electronAPI.installSporemodapiMod('totallynotacheater', extractedPath, zipPath, gameType)
     });
 }
 
@@ -299,72 +410,85 @@ window.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
+    // --- MODALS TOGGLE LOGIC ---
+
     const settingsModal = document.getElementById('settings-modal');
     const settingsModalContent = settingsModal?.querySelector('.mods-modal-content');
-    document.querySelector('.footer-settings')?.addEventListener('click', () => {
-        document.getElementById('mods-modal')?.classList.add('hidden');
-        if (settingsModal.classList.contains('hidden')) {
-            settingsModal.classList.remove('hidden', 'animating-out');
-            settingsModal.classList.add('animating-in');
-            settingsModalContent.classList.remove('animating-out');
-            settingsModalContent.classList.add('animating-in');
-            setTimeout(() => {
-                settingsModal.classList.remove('animating-in');
-                settingsModalContent.classList.remove('animating-in');
-            }, 350);
-        }
-    });
-    document.getElementById('close-settings-modal')?.addEventListener('click', e => {
-        e.preventDefault();
-        settingsModal?.classList.add('animating-out');
-        settingsModalContent?.classList.add('animating-out');
-        setTimeout(() => {
-            settingsModal?.classList.add('hidden');
-            settingsModal?.classList.remove('animating-out');
-            settingsModalContent?.classList.remove('animating-out');
-        }, 250);
-    });
-
     const modsModal = document.getElementById('mods-modal');
-    const modsModalContent = modsModal.querySelector('.mods-modal-content');
-    document.querySelector('.footer-item img[alt="Install Mods"]')?.parentElement.addEventListener('click', () => {
-        const settingsModal = document.getElementById('settings-modal');
-        const settingsModalContent = settingsModal?.querySelector('.mods-modal-content');
+    const modsModalContent = modsModal?.querySelector('.mods-modal-content');
+    const footerMods = document.getElementById('footer-mods');
+    const footerSettings = document.getElementById('footer-settings');
+
+    function setFooterActive(tab) {
+        document.querySelectorAll('.footer-item').forEach(el => el.classList.remove('active'));
+        if (tab === 'mods') {
+            footerMods?.classList.add('active');
+        } else if (tab === 'settings') {
+            footerSettings?.classList.add('active');
+        }
+    }
+
+    footerMods?.addEventListener('click', () => {
+        if (!modsModal.classList.contains('hidden')) {
+            modsModal.classList.add('hidden');
+            setFooterActive(null);
+            return;
+        }
         if (settingsModal && !settingsModal.classList.contains('hidden')) {
             settingsModal.classList.add('hidden');
             settingsModal.classList.remove('animating-in', 'animating-out');
             settingsModalContent?.classList.remove('animating-in', 'animating-out');
         }
-        document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
-        const allBtn = document.getElementById('filter-all');
-        if (allBtn) allBtn.classList.add('active');
-        document.querySelectorAll('.mods-table tbody tr').forEach(row => {
-            row.style.display = '';
+        modsModal.classList.remove('hidden', 'animating-out');
+        modsModal.scrollTop = 0;
+        modsModalContent?.scrollTo?.(0, 0);
+        modsModal.querySelectorAll('*').forEach(el => {
+            if (el.scrollHeight > el.clientHeight) el.scrollTop = 0;
         });
-        if (modsModal.classList.contains('hidden')) {
-            modsModal.classList.remove('hidden', 'animating-out');
-            modsModal.classList.add('animating-in');
-            modsModalContent.classList.remove('animating-out');
-            modsModalContent.classList.add('animating-in');
-            setTimeout(() => {
-                modsModal.classList.remove('animating-in');
-                modsModalContent.classList.remove('animating-in');
-            }, 350);
-        }
-    });
-    document.getElementById('close-mods-modal')?.addEventListener('click', e => {
-        e.preventDefault();
-        modsModal.classList.add('animating-out');
-        modsModalContent.classList.add('animating-out');
+        modsModal.classList.add('animating-in');
+        modsModalContent?.classList.remove('animating-out');
+        modsModalContent?.classList.add('animating-in');
         setTimeout(() => {
+            modsModal.classList.remove('animating-in');
+            modsModalContent?.classList.remove('animating-in');
+        }, 350);
+        setFooterActive('mods');
+    });
+    footerSettings?.addEventListener('click', () => {
+        if (!settingsModal.classList.contains('hidden')) {
+            settingsModal.classList.add('hidden');
+            setFooterActive(null);
+            return;
+        }
+        if (modsModal && !modsModal.classList.contains('hidden')) {
             modsModal.classList.add('hidden');
-            modsModal.classList.remove('animating-out');
-            modsModalContent.classList.remove('animating-out');
-        }, 250);
+            modsModal.classList.remove('animating-in', 'animating-out');
+            modsModalContent?.classList.remove('animating-in', 'animating-out');
+        }
+        settingsModal.classList.remove('hidden', 'animating-out');
+        settingsModalContent?.scrollTo?.(0, 0);
+        settingsModal.classList.add('animating-in');
+        settingsModalContent?.classList.remove('animating-out');
+        settingsModalContent?.classList.add('animating-in');
+        setTimeout(() => {
+            settingsModal.classList.remove('animating-in');
+            settingsModalContent?.classList.remove('animating-in');
+        }, 350);
+        setFooterActive('settings');
+    });
+
+    document.getElementById('close-settings-modal')?.addEventListener('click', () => {
+        settingsModal?.classList.add('hidden');
+        setFooterActive(null);
+    });
+
+    document.getElementById('close-mods-modal')?.addEventListener('click', () => {
+        modsModal?.classList.add('hidden');
+        setFooterActive(null);
     });
 
     document.querySelector('.play-btn-sporega')?.addEventListener('click', async () => {
-        if (!await window.electronAPI.launchSpore()) alert(currentTranslations.gaLaunchError);
+        if (!await window.electronAPI.launchSporeModAPI()) alert(currentTranslations.gaLaunchError);
     });
     document.querySelector('.play-btn-spore-base')?.addEventListener('click', async () => {
         if (!await window.electronAPI.launchSporeBase()) alert(currentTranslations.sporeLaunchError);
@@ -423,6 +547,8 @@ async function loadLocale(lang) {
     if (updatedTextEl && newVersionAvailable) {
         updatedTextEl.innerHTML = `${currentTranslations.updateAvailableText} <br><span style="color:#aaa;">${currentTranslations.newVersionLabel || 'Nueva versión:'} v${newVersionAvailable}</span>`;
     }
+
+    sortModsTable();
 }
 
 window.electronAPI.onUpdateAvailable((_, version) => {
@@ -460,5 +586,51 @@ document.getElementById('extra-action-btn')?.addEventListener('click', async () 
         } else {
             alert(currentTranslations.uninstallAllNone || "No había mods instalados para desinstalar.");
         }
+    }
+});
+
+function sortModsTable() {
+    document.querySelectorAll('.mods-table').forEach(table => {
+        const categoryOrder = {
+            'optimization': 1,
+            'textures': 2,
+            'overhaul': 3
+        };
+
+        let allRows = [];
+        table.querySelectorAll('tbody tr').forEach(row => {
+            allRows.push(row);
+        });
+
+        allRows.sort((a, b) => {
+            const catA = a.getAttribute('data-category') || '';
+            const catB = b.getAttribute('data-category') || '';
+            const orderA = categoryOrder[catA] || 99;
+            const orderB = categoryOrder[catB] || 99;
+            if (orderA !== orderB) return orderA - orderB;
+            const nameA = (a.querySelector('.mod-main-title')?.textContent || '').trim().toLowerCase();
+            const nameB = (b.querySelector('.mod-main-title')?.textContent || '').trim().toLowerCase();
+            return nameA.localeCompare(nameB, 'en');
+        });
+
+        table.querySelectorAll('tbody').forEach(tbody => {
+            while (tbody.firstChild) tbody.removeChild(tbody.firstChild);
+        });
+
+        allRows.forEach(row => {
+            const cat = row.getAttribute('data-category');
+            let targetTbody = Array.from(table.querySelectorAll('tbody')).find(tb =>
+                tb.querySelector(`tr[data-category="${cat}"]`)
+            ) || table.querySelector('tbody');
+            targetTbody.appendChild(row);
+        });
+    });
+}
+
+document.addEventListener('click', function (e) {
+    const target = e.target.closest('a[data-external]');
+    if (target) {
+        e.preventDefault();
+        window.electronAPI.openExternal(target.href);
     }
 });

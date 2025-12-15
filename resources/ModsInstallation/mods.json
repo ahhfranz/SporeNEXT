@@ -1,0 +1,61 @@
+[
+    {
+        "id": "allspicesmaxprice",
+        "name": "All Spices Max Price",
+        "dll": "All Spice Max Price.dll",
+        "sporemod": "AllSpicesMaxPrice.sporemod",
+        "installer": "Spore ModAPI Easy Installer.exe"
+    },
+    {
+        "id": "crashfix",
+        "name": "Crash Fix",
+        "dll": "SporeCrashFix.dll",
+        "sporemod": "SporeCrashFix.sporemod",
+        "installer": "Spore ModAPI Easy Installer.exe"
+    },
+    {
+        "id": "onlinefix",
+        "name": "Online Fix",
+        "dll": "SporeFixOnline.dll",
+        "sporemod": "SporeFixOnline.sporemod",
+        "installer": "Spore ModAPI Easy Installer.exe"
+    },
+    {
+        "id": "longerprogressioninspacestage",
+        "name": "Longer Progression In Space Stage",
+        "dll": "LongerProgressionInSpaceStage",
+        "package": "Longer_Progression_in_Space_Stage.package",
+        "sporemod": "LongerProgressionInSpaceStage.sporemod",
+        "installer": "Spore ModAPI Easy Installer.exe"
+    },
+    {
+        "id": "sellanyamount",
+        "name": "Sell Any Amount",
+        "dll": "SellAnyAmount.dll",
+        "package": "SellAnyAmount.package",
+        "sporemod": "SellAnyAmount.sporemod",
+        "installer": "Spore ModAPI Easy Installer.exe"
+    },
+    {
+        "id": "enhancedcolorpicker",
+        "name": "Enhanced Color Picker",
+        "dll": "EnhancedColorPicker.dll",
+        "package": "EnhancedColorPicker.package",
+        "sporemod": "EnhancedColorPicker.sporemod",
+        "installer": "Spore ModAPI Easy Installer.exe"
+    },
+    {
+        "id": "defensiveshipsinplayercolonies",
+        "name": "Defensive Ships In Player Colonies",
+        "dll": "Defensive Ships In Player Colonies.dll",
+        "sporemod": "DefensiveShipsInPlayerColonies.sporemod",
+        "installer": "Spore ModAPI Easy Installer.exe"
+    },
+    {
+        "id": "totallynotacheater",
+        "name": "Totally Not A Cheater",
+        "dll": "TotallyNotACheater",
+        "sporemod": "TotallyNotACheater.sporemod",
+        "installer": "Spore ModAPI Easy Installer.exe"
+    }
+]

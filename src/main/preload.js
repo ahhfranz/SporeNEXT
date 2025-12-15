@@ -7,7 +7,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
     minimizeWindow: () => ipcRenderer.invoke('minimize-window'),
     maximizeWindow: () => ipcRenderer.invoke('maximize-window'),
     openModsFolder: () => ipcRenderer.invoke('open-mods-folder'),
-    launchSpore: () => ipcRenderer.invoke('launch-spore'),
+    launchSporeModAPI: () => ipcRenderer.invoke('launch-spore-modapi'),
     launchSporeBase: () => ipcRenderer.invoke('launch-spore-base'),
     openDiscord: () => ipcRenderer.invoke('open-discord'),
     openKofi: () => ipcRenderer.invoke('open-kofi'),
@@ -45,4 +45,12 @@ contextBridge.exposeInMainWorld('electronAPI', {
     uninstallAllMods: () => ipcRenderer.invoke('uninstall-all-mods'),
     onModUnzipProgress: (callback) => ipcRenderer.on('mod-unzip-progress', (_e, progress) => callback(progress)),
     removeModUnzipProgress: (callback) => ipcRenderer.removeListener('mod-unzip-progress', callback),
+    installSporemodapi: (modPath, gameType, extractedPath, zipPath) =>
+        ipcRenderer.invoke('install-sporemodapi', modPath, gameType, extractedPath, zipPath),
+    installSporemodapiMod: (modId, extractedPath, zipPath, gameType) =>
+        ipcRenderer.invoke('install-sporemodapi-mod', modId, extractedPath, zipPath, gameType),
+    isSporemodapiModInstalled: (modId) =>
+        ipcRenderer.invoke('is-sporemodapi-mod-installed', modId),
+    uninstallSporemodapiMod: (modId) =>
+        ipcRenderer.invoke('uninstall-sporemodapi-mod', modId),
 });

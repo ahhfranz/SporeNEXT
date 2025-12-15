@@ -25,7 +25,7 @@
 
         <div class="launcher-footer">
             <div class="footer-items-group">
-                <div class="footer-item">
+                <div class="footer-item" id="footer-mods">
                     <img src="assets/install.png" alt="Install Mods" draggable="false">
                     <span data-i18n="modslist"></span>
                 </div>
@@ -33,12 +33,12 @@
                     <img src="assets/discord.png" alt="Discord" draggable="false">
                     <span data-i18n="discord"></span>
                 </div>
-                <div class="footer-item">
+                <div class="footer-item" id="footer-donate">
                     <img src="assets/donate.png" alt="Kofi" draggable="false">
                     <span data-i18n="donations"></span>
                 </div>
             </div>
-            <div class="footer-item footer-settings">
+            <div class="footer-item footer-settings" id="footer-settings">
                 <img src="assets/settings.png" alt="Settings" draggable="false">
                 <span data-i18n="settings"></span>
             </div>
@@ -209,8 +209,9 @@
                             <img src="assets/overhaul.png" alt="Overhaul" />
                         </button>
                     </div>
-
                 </div>
+
+
                 <div class="mods-table-container">
                     <table class="mods-table">
                         <thead>
@@ -279,6 +280,7 @@
                                         data-i18n="modCategoryOptimization"></span></td>
                             </tr>
                         </tbody>
+
                         <tbody>
                             <tr data-category="optimization">
                                 <td>
@@ -334,6 +336,7 @@
                                         data-i18n="modCategoryOptimization"></span></td>
                             </tr>
                         </tbody>
+
                         <tr data-category="textures">
                             <td>
                                 <div class="mod-name-cell">
@@ -385,6 +388,495 @@
                             <td><span class="badge-style badge-textures" data-i18n="modCategoryTextures"></span></td>
                         </tr>
                         </tbody>
+
+                        <tbody>
+                            <tr data-category="overhaul">
+                                <td>
+                                    <div class="mod-name-cell">
+                                        <img src="assets/mod-allspicesmaxprice.png" alt="All Spices Max Price"
+                                            class="mod-icon" draggable="false">
+                                        <div>
+                                            <span class="mod-main-title" data-i18n="modAllSpicesMaxPriceTitle"></span>
+                                            <span class="mod-file-name" data-i18n="modAllSpicesMaxPriceFile"></span>
+                                        </div>
+                                    </div>
+                                    <div class="mod-icons-row">
+                                        <a href="https://launcherkit.sporecommunity.com/" rel="noopener" data-external>
+                                            <img src="assets/SporeModAPI.png" alt="Uses SporeModAPI" draggable="false">
+                                        </a>
+                                        <a href="https://launcherkit.sporecommunity.com/" rel="noopener" data-external>
+                                            <img src="assets/SporeModAPI-Installer.png"
+                                                alt="Installed with SporeModAPI Easy Installer" draggable="false">
+                                        </a>
+                                        <a href="https://github.com/Sadicto/All-Spices-Max-Price" rel="noopener"
+                                            data-external>
+                                            <img src="assets/github.png" alt="GitHub" draggable="false">
+                                        </a>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="mod-action-container">
+                                        <div class="mod-action-btn-group">
+                                            <div class="mod-progress-bar" style="display:none;">
+                                                <div class="progress-bar-fill"
+                                                    style="width:0%;height:18px;border-radius:6px;"></div>
+                                            </div>
+                                            <span class="progress-bar-text"
+                                                style="color:#fff;font-size:0.95em;display:block;margin-top:4px;"></span>
+                                        </div>
+                                        <div class="mod-action-btn-group">
+                                            <button class="download-mod-sporega-btn" data-mod-id="AllSpicesMaxPrice"
+                                                data-mod-url="https://pub-f564be9e0d7346339919d7f640464d71.r2.dev/AllSpicesMaxPrice.zip"
+                                                data-game-type="ga">
+                                                <img src="assets/sporega.png" alt="Spore"
+                                                    style="width:20px;height:20px;vertical-align:middle;"
+                                                    draggable="false">
+                                                <span data-i18n="download"></span>
+                                            </button>
+                                            <div class="mod-progress-bar" style="display:none;">
+                                                <div class="progress-bar-fill-ga"
+                                                    style="width:0%;height:18px;border-radius:6px;"></div>
+                                            </div>
+                                            <span class="progress-bar-text"
+                                                style="color:#fff;font-size:0.95em;display:block;margin-top:4px;"></span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td><span class="badge-style" data-i18n="modAllSpicesMaxPriceSize"></span></td>
+                                <td><span data-i18n="modAllSpicesMaxPriceDescription"></span></td>
+                                <td><span data-i18n="modAllSpicesMaxPriceAuthor"></span></td>
+                                <td><span class="badge-style badge-overhaul" data-i18n="modCategoryOverhaul"></span>
+                                </td>
+                            </tr>
+                        </tbody>
+
+                        <tbody>
+                            <tr data-category="optimization">
+                                <td>
+                                    <div class="mod-name-cell">
+                                        <img src="assets/mod-online.png" alt="Online Fix" class="mod-icon"
+                                            draggable="false">
+                                        <div>
+                                            <span class="mod-main-title" data-i18n="modOnlineTitle"></span>
+                                            <span class="mod-file-name" data-i18n="modOnlineFile"></span>
+                                        </div>
+                                    </div>
+                                    <div class="mod-icons-row">
+                                        <a href="https://launcherkit.sporecommunity.com/" rel="noopener" data-external>
+                                            <img src="assets/SporeModAPI.png" alt="Uses SporeModAPI" draggable="false">
+                                        </a>
+                                        <a href="https://launcherkit.sporecommunity.com/" rel="noopener" data-external>
+                                            <img src="assets/SporeModAPI-Installer.png"
+                                                alt="Installed with SporeModAPI Easy Installer" draggable="false">
+                                        </a>
+                                        <a href="https://github.com/Rosalie241/SporeFixOnline" rel="noopener"
+                                            data-external>
+                                            <img src="assets/github.png" alt="GitHub" draggable="false">
+                                        </a>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="mod-action-container">
+                                        <div class="mod-action-btn-group">
+                                            <button class="download-mod-sporega-btn" data-mod-id="OnlineFix"
+                                                data-mod-url="https://pub-f564be9e0d7346339919d7f640464d71.r2.dev/OnlineFix.zip"
+                                                data-game-type="ga">
+                                                <img src="assets/sporega.png" alt="Spore"
+                                                    style="width:20px;height:20px;vertical-align:middle;"
+                                                    draggable="false">
+                                                <span data-i18n="download"></span>
+                                            </button>
+                                            <div class="mod-progress-bar" style="display:none;">
+                                                <div class="progress-bar-fill-ga"
+                                                    style="width:0%;height:18px;border-radius:6px;"></div>
+                                            </div>
+                                            <span class="progress-bar-text"
+                                                style="color:#fff;font-size:0.95em;display:block;margin-top:4px;"></span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td><span class="badge-style" data-i18n="modOnlineSize"></span></td>
+                                <td><span data-i18n="modOnlineDescription"></span></td>
+                                <td><span data-i18n="modOnlineAuthor"></span></td>
+                                <td><span class="badge-style badge-optimization"
+                                        data-i18n="modCategoryOptimization"></span></td>
+                            </tr>
+                        </tbody>
+
+                        <tbody>
+                            <tr data-category="optimization">
+                                <td>
+                                    <div class="mod-name-cell">
+                                        <img src="assets/mod-crash.png" alt="Crash Fix" class="mod-icon"
+                                            draggable="false">
+                                        <div>
+                                            <span class="mod-main-title" data-i18n="modCrashTitle"></span>
+                                            <span class="mod-file-name" data-i18n="modCrashFile"></span>
+                                        </div>
+                                    </div>
+                                    <div class="mod-icons-row">
+                                        <a href="https://launcherkit.sporecommunity.com/" rel="noopener" data-external>
+                                            <img src="assets/SporeModAPI.png" alt="Uses SporeModAPI" draggable="false">
+                                        </a>
+                                        <a href="https://launcherkit.sporecommunity.com/" rel="noopener" data-external>
+                                            <img src="assets/SporeModAPI-Installer.png"
+                                                alt="Installed with SporeModAPI Easy Installer" draggable="false">
+                                        </a>
+                                        <a href="https://github.com/Rosalie241/SporeCrashFix" rel="noopener"
+                                            data-external>
+                                            <img src="assets/github.png" alt="GitHub" draggable="false">
+                                        </a>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="mod-action-container">
+                                        <div class="mod-action-btn-group">
+                                            <button class="download-mod-sporega-btn" data-mod-id="CrashFix"
+                                                data-mod-url="https://pub-f564be9e0d7346339919d7f640464d71.r2.dev/CrashFix.zip"
+                                                data-game-type="ga">
+                                                <img src="assets/sporega.png" alt="Spore"
+                                                    style="width:20px;height:20px;vertical-align:middle;"
+                                                    draggable="false">
+                                                <span data-i18n="download"></span>
+                                            </button>
+                                            <div class="mod-progress-bar" style="display:none;">
+                                                <div class="progress-bar-fill-ga"
+                                                    style="width:0%;height:18px;border-radius:6px;"></div>
+                                            </div>
+                                            <span class="progress-bar-text"
+                                                style="color:#fff;font-size:0.95em;display:block;margin-top:4px;"></span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td><span class="badge-style" data-i18n="modCrashSize"></span></td>
+                                <td><span data-i18n="modCrashDescription"></span></td>
+                                <td><span data-i18n="modCrashAuthor"></span></td>
+                                <td><span class="badge-style badge-optimization"
+                                        data-i18n="modCategoryOptimization"></span></td>
+                            </tr>
+                        </tbody>
+
+                        <tbody>
+                            <tr data-category="overhaul">
+                                <td>
+                                    <div class="mod-name-cell">
+                                        <img src="assets/mod-longerprogressioninspacestage.png"
+                                            alt="Longer Progression In Space Stage" class="mod-icon" draggable="false">
+                                        <div>
+                                            <span class="mod-main-title"
+                                                data-i18n="modLongerProgressionInSpaceStageTitle"></span>
+                                            <span class="mod-file-name"
+                                                data-i18n="modLongerProgressionInSpaceStageFile"></span>
+                                        </div>
+                                    </div>
+                                    <div class="mod-icons-row">
+                                        <a href="https://launcherkit.sporecommunity.com/" rel="noopener" data-external>
+                                            <img src="assets/SporeModAPI.png" alt="Uses SporeModAPI" draggable="false">
+                                        </a>
+                                        <a href="https://launcherkit.sporecommunity.com/" rel="noopener" data-external>
+                                            <img src="assets/SporeModAPI-Installer.png"
+                                                alt="Installed with SporeModAPI Easy Installer" draggable="false">
+                                        </a>
+                                        <a href="https://github.com/massa-bixo/Longer-Progression-in-Space-Stage"
+                                            rel="noopener" data-external>
+                                            <img src="assets/github.png" alt="GitHub" draggable="false">
+                                        </a>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="mod-action-container">
+                                        <div class="mod-action-btn-group">
+                                            <div class="mod-progress-bar" style="display:none;">
+                                                <div class="progress-bar-fill"
+                                                    style="width:0%;height:18px;border-radius:6px;"></div>
+                                            </div>
+                                            <span class="progress-bar-text"
+                                                style="color:#fff;font-size:0.95em;display:block;margin-top:4px;"></span>
+                                        </div>
+                                        <div class="mod-action-btn-group">
+                                            <button class="download-mod-sporega-btn"
+                                                data-mod-id="LongerProgressionInSpaceStage"
+                                                data-mod-url="https://pub-f564be9e0d7346339919d7f640464d71.r2.dev/LongerProgressionInSpaceStage.zip"
+                                                data-game-type="ga">
+                                                <img src="assets/sporega.png" alt="Spore"
+                                                    style="width:20px;height:20px;vertical-align:middle;"
+                                                    draggable="false">
+                                                <span data-i18n="download"></span>
+                                            </button>
+                                            <div class="mod-progress-bar" style="display:none;">
+                                                <div class="progress-bar-fill-ga"
+                                                    style="width:0%;height:18px;border-radius:6px;"></div>
+                                            </div>
+                                            <span class="progress-bar-text"
+                                                style="color:#fff;font-size:0.95em;display:block;margin-top:4px;"></span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td><span class="badge-style" data-i18n="modLongerProgressionInSpaceStageSize"></span>
+                                </td>
+                                <td><span data-i18n="modLongerProgressionInSpaceStageDescription"></span></td>
+                                <td><span data-i18n="modLongerProgressionInSpaceStageAuthor"></span></td>
+                                <td><span class="badge-style badge-overhaul" data-i18n="modCategoryOverhaul"></span>
+                                </td>
+                            </tr>
+                        </tbody>
+
+                        <tbody>
+                            <tr data-category="overhaul">
+                                <td>
+                                    <div class="mod-name-cell">
+                                        <img src="assets/mod-sellanyamount.png" alt="Sell Any Amount" class="mod-icon"
+                                            draggable="false">
+                                        <div>
+                                            <span class="mod-main-title" data-i18n="modSellAnyAmountTitle"></span>
+                                            <span class="mod-file-name" data-i18n="modSellAnyAmountFile"></span>
+                                        </div>
+                                    </div>
+                                    <div class="mod-icons-row">
+                                        <a href="https://launcherkit.sporecommunity.com/" rel="noopener" data-external>
+                                            <img src="assets/SporeModAPI.png" alt="Uses SporeModAPI" draggable="false">
+                                        </a>
+                                        <a href="https://launcherkit.sporecommunity.com/" rel="noopener" data-external>
+                                            <img src="assets/SporeModAPI-Installer.png"
+                                                alt="Installed with SporeModAPI Easy Installer" draggable="false">
+                                        </a>
+                                        <a href="https://github.com/Studumb/SellAnyAmount" rel="noopener" data-external>
+                                            <img src="assets/github.png" alt="GitHub" draggable="false">
+                                        </a>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="mod-action-container">
+                                        <div class="mod-action-btn-group">
+                                            <div class="mod-progress-bar" style="display:none;">
+                                                <div class="progress-bar-fill"
+                                                    style="width:0%;height:18px;border-radius:6px;"></div>
+                                            </div>
+                                            <span class="progress-bar-text"
+                                                style="color:#fff;font-size:0.95em;display:block;margin-top:4px;"></span>
+                                        </div>
+                                        <div class="mod-action-btn-group">
+                                            <button class="download-mod-sporega-btn" data-mod-id="SellAnyAmount"
+                                                data-mod-url="https://pub-f564be9e0d7346339919d7f640464d71.r2.dev/SellAnyAmount.zip"
+                                                data-game-type="ga">
+                                                <img src="assets/sporega.png" alt="Spore"
+                                                    style="width:20px;height:20px;vertical-align:middle;"
+                                                    draggable="false">
+                                                <span data-i18n="download"></span>
+                                            </button>
+                                            <div class="mod-progress-bar" style="display:none;">
+                                                <div class="progress-bar-fill-ga"
+                                                    style="width:0%;height:18px;border-radius:6px;"></div>
+                                            </div>
+                                            <span class="progress-bar-text"
+                                                style="color:#fff;font-size:0.95em;display:block;margin-top:4px;"></span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td><span class="badge-style" data-i18n="modSellAnyAmountSize"></span>
+                                </td>
+                                <td><span data-i18n="modSellAnyAmountDescription"></span></td>
+                                <td><span data-i18n="modSellAnyAmountAuthor"></span></td>
+                                <td><span class="badge-style badge-overhaul" data-i18n="modCategoryOverhaul"></span>
+                                </td>
+                            </tr>
+                        </tbody>
+
+
+                        <tbody>
+                            <tr data-category="overhaul">
+                                <td>
+                                    <div class="mod-name-cell">
+                                        <img src="assets/mod-enhancedcolorpicker.png" alt="Enhanced Color Picker"
+                                            class="mod-icon" draggable="false">
+                                        <div>
+                                            <span class="mod-main-title" data-i18n="modEnhancedColorPickerTitle"></span>
+                                            <span class="mod-file-name" data-i18n="modEnhancedColorPickerFile"></span>
+                                        </div>
+                                    </div>
+                                    <div class="mod-icons-row">
+                                        <a href="https://launcherkit.sporecommunity.com/" rel="noopener" data-external>
+                                            <img src="assets/SporeModAPI.png" alt="Uses SporeModAPI" draggable="false">
+                                        </a>
+                                        <a href="https://launcherkit.sporecommunity.com/" rel="noopener" data-external>
+                                            <img src="assets/SporeModAPI-Installer.png"
+                                                alt="Installed with SporeModAPI Easy Installer" draggable="false">
+                                        </a>
+                                        <a href="https://github.com/emd4600/EnhancedColorPickerMod" rel="noopener"
+                                            data-external>
+                                            <img src="assets/github.png" alt="GitHub" draggable="false">
+                                        </a>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="mod-action-container">
+                                        <div class="mod-action-btn-group">
+                                            <div class="mod-progress-bar" style="display:none;">
+                                                <div class="progress-bar-fill"
+                                                    style="width:0%;height:18px;border-radius:6px;"></div>
+                                            </div>
+                                            <span class="progress-bar-text"
+                                                style="color:#fff;font-size:0.95em;display:block;margin-top:4px;"></span>
+                                        </div>
+                                        <div class="mod-action-btn-group">
+                                            <button class="download-mod-sporega-btn" data-mod-id="EnhancedColorPicker"
+                                                data-mod-url="https://pub-f564be9e0d7346339919d7f640464d71.r2.dev/EnhancedColorPicker.zip"
+                                                data-game-type="ga">
+                                                <img src="assets/sporega.png" alt="Spore"
+                                                    style="width:20px;height:20px;vertical-align:middle;"
+                                                    draggable="false">
+                                                <span data-i18n="download"></span>
+                                            </button>
+                                            <div class="mod-progress-bar" style="display:none;">
+                                                <div class="progress-bar-fill-ga"
+                                                    style="width:0%;height:18px;border-radius:6px;"></div>
+                                            </div>
+                                            <span class="progress-bar-text"
+                                                style="color:#fff;font-size:0.95em;display:block;margin-top:4px;"></span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td><span class="badge-style" data-i18n="modEnhancedColorPickerSize"></span>
+                                </td>
+                                <td><span data-i18n="modEnhancedColorPickerDescription"></span></td>
+                                <td><span data-i18n="modEnhancedColorPickerAuthor"></span></td>
+                                <td><span class="badge-style badge-overhaul" data-i18n="modCategoryOverhaul"></span>
+                                </td>
+                            </tr>
+                        </tbody>
+
+                        <tbody>
+                            <tr data-category="overhaul">
+                                <td>
+                                    <div class="mod-name-cell">
+                                        <img src="assets/mod-defensiveships.png"
+                                            alt="Defensive Ships In Player Colonies" class="mod-icon" draggable="false">
+                                        <div>
+                                            <span class="mod-main-title"
+                                                data-i18n="modDefensiveShipsInPlayerColoniesTitle"></span>
+                                            <span class="mod-file-name"
+                                                data-i18n="modDefensiveShipsInPlayerColoniesFile"></span>
+                                        </div>
+                                    </div>
+                                    <div class="mod-icons-row">
+                                        <a href="https://launcherkit.sporecommunity.com/" rel="noopener" data-external>
+                                            <img src="assets/SporeModAPI.png" alt="Uses SporeModAPI" draggable="false">
+                                        </a>
+                                        <a href="https://launcherkit.sporecommunity.com/" rel="noopener" data-external>
+                                            <img src="assets/SporeModAPI-Installer.png"
+                                                alt="Installed with SporeModAPI Easy Installer" draggable="false">
+                                        </a>
+                                        <a href="https://github.com/Sadicto/Defensive-Ships-In-Player-Colonies"
+                                            rel="noopener" data-external>
+                                            <img src="assets/github.png" alt="GitHub" draggable="false">
+                                        </a>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="mod-action-container">
+                                        <div class="mod-action-btn-group">
+                                            <div class="mod-progress-bar" style="display:none;">
+                                                <div class="progress-bar-fill"
+                                                    style="width:0%;height:18px;border-radius:6px;"></div>
+                                            </div>
+                                            <span class="progress-bar-text"
+                                                style="color:#fff;font-size:0.95em;display:block;margin-top:4px;"></span>
+                                        </div>
+                                        <div class="mod-action-btn-group">
+                                            <button class="download-mod-sporega-btn"
+                                                data-mod-id="DefensiveShipsInPlayerColonies"
+                                                data-mod-url="https://pub-f564be9e0d7346339919d7f640464d71.r2.dev/DefensiveShipsInPlayerColonies.zip"
+                                                data-game-type="ga">
+                                                <img src="assets/sporega.png" alt="Spore"
+                                                    style="width:20px;height:20px;vertical-align:middle;"
+                                                    draggable="false">
+                                                <span data-i18n="download"></span>
+                                            </button>
+                                            <div class="mod-progress-bar" style="display:none;">
+                                                <div class="progress-bar-fill-ga"
+                                                    style="width:0%;height:18px;border-radius:6px;"></div>
+                                            </div>
+                                            <span class="progress-bar-text"
+                                                style="color:#fff;font-size:0.95em;display:block;margin-top:4px;"></span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td><span class="badge-style" data-i18n="modDefensiveShipsInPlayerColoniesSize"></span>
+                                </td>
+                                <td><span data-i18n="modDefensiveShipsInPlayerColoniesDescription"></span></td>
+                                <td><span data-i18n="modDefensiveShipsInPlayerColoniesAuthor"></span></td>
+                                <td><span class="badge-style badge-overhaul" data-i18n="modCategoryOverhaul"></span>
+                                </td>
+                            </tr>
+                        </tbody>
+
+                        <tbody>
+                            <tr data-category="overhaul">
+                                <td>
+                                    <div class="mod-name-cell">
+                                        <img src="assets/mod-totallynotacheater.png" alt="Totally Not A Cheater"
+                                            class="mod-icon" draggable="false">
+                                        <div>
+                                            <span class="mod-main-title" data-i18n="modTotallyNotACheaterTitle"></span>
+                                            <span class="mod-file-name" data-i18n="modTotallyNotACheaterFile"></span>
+                                        </div>
+                                    </div>
+                                    <div class="mod-icons-row">
+                                        <a href="https://launcherkit.sporecommunity.com/" rel="noopener" data-external>
+                                            <img src="assets/SporeModAPI.png" alt="Uses SporeModAPI" draggable="false">
+                                        </a>
+                                        <a href="https://launcherkit.sporecommunity.com/" rel="noopener" data-external>
+                                            <img src="assets/SporeModAPI-Installer.png"
+                                                alt="Installed with SporeModAPI Easy Installer" draggable="false">
+                                        </a>
+                                        <a href="https://github.com/Kade-N/Spore-TotallyNotACheater" rel="noopener"
+                                            data-external>
+                                            <img src="assets/github.png" alt="GitHub" draggable="false">
+                                        </a>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="mod-action-container">
+                                        <div class="mod-action-btn-group">
+                                            <div class="mod-progress-bar" style="display:none;">
+                                                <div class="progress-bar-fill"
+                                                    style="width:0%;height:18px;border-radius:6px;"></div>
+                                            </div>
+                                            <span class="progress-bar-text"
+                                                style="color:#fff;font-size:0.95em;display:block;margin-top:4px;"></span>
+                                        </div>
+                                        <div class="mod-action-btn-group">
+                                            <button class="download-mod-sporega-btn" data-mod-id="TotallyNotACheater"
+                                                data-mod-url="https://pub-f564be9e0d7346339919d7f640464d71.r2.dev/TotallyNotACheater.zip"
+                                                data-game-type="ga">
+                                                <img src="assets/sporega.png" alt="Spore"
+                                                    style="width:20px;height:20px;vertical-align:middle;"
+                                                    draggable="false">
+                                                <span data-i18n="download"></span>
+                                            </button>
+                                            <div class="mod-progress-bar" style="display:none;">
+                                                <div class="progress-bar-fill-ga"
+                                                    style="width:0%;height:18px;border-radius:6px;"></div>
+                                            </div>
+                                            <span class="progress-bar-text"
+                                                style="color:#fff;font-size:0.95em;display:block;margin-top:4px;"></span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td><span class="badge-style" data-i18n="modTotallyNotACheaterSize"></span>
+                                </td>
+                                <td><span data-i18n="modTotallyNotACheaterDescription"></span></td>
+                                <td><span data-i18n="modTotallyNotACheaterAuthor"></span></td>
+                                <td><span class="badge-style badge-overhaul" data-i18n="modCategoryOverhaul"></span>
+                                </td>
+                            </tr>
+                        </tbody>
+
+
+
+
+
+
 
                     </table>
                 </div>
