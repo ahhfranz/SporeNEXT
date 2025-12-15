@@ -1,5 +1,11 @@
+// ==========================
+// Globals and State
+// ==========================
 let currentTranslations = {}, newVersionAvailable = null;
 
+// ==========================
+// Utility Functions
+// ==========================
 function cleanupListeners(btns) {
     btns.forEach(b => {
         if (b.downloadListener) {
@@ -18,36 +24,92 @@ function cleanupListeners(btns) {
     });
 }
 
-document.addEventListener('DOMContentLoaded', function () {
-    const filterButtons = document.querySelectorAll('.filter-btn');
-    const modRows = document.querySelectorAll('.mods-table tbody tr');
-    filterButtons.forEach(btn => {
-        btn.addEventListener('click', function () {
-            filterButtons.forEach(b => b.classList.remove('active'));
-            this.classList.add('active');
-            let filter = this.id.replace('filter-', '');
-            modRows.forEach(row => {
-                if (filter === 'all') {
-                    row.style.display = '';
-                } else {
-                    row.style.display = row.getAttribute('data-category') === filter ? '' : 'none';
-                }
-            });
+function sortModsTable() {
+    document.querySelectorAll('.mods-table').forEach(table => {
+        const categoryOrder = {
+            'optimization': 1,
+            'textures': 2,
+            'overhaul': 3
+        };
+
+        let allRows = [];
+        table.querySelectorAll('tbody tr').forEach(row => {
+            allRows.push(row);
+        });
+
+        allRows.sort((a, b) => {
+            const catA = a.getAttribute('data-category') || '';
+            const catB = b.getAttribute('data-category') || '';
+            const orderA = categoryOrder[catA] || 99;
+            const orderB = categoryOrder[catB] || 99;
+            if (orderA !== orderB) return orderA - orderB;
+            const nameA = (a.querySelector('.mod-main-title')?.textContent || '').trim().toLowerCase();
+            const nameB = (b.querySelector('.mod-main-title')?.textContent || '').trim().toLowerCase();
+            return nameA.localeCompare(nameB, 'en');
+        });
+
+        table.querySelectorAll('tbody').forEach(tbody => {
+            while (tbody.firstChild) tbody.removeChild(tbody.firstChild);
+        });
+
+        allRows.forEach(row => {
+            const cat = row.getAttribute('data-category');
+            let targetTbody = Array.from(table.querySelectorAll('tbody')).find(tb =>
+                tb.querySelector(`tr[data-category="${cat}"]`)
+            ) || table.querySelector('tbody');
+            targetTbody.appendChild(row);
         });
     });
+}
 
-    document.getElementById('filter-all')?.classList.add('active');
-});
-
-
-document.body.addEventListener('click', function (e) {
-    const target = e.target.closest('a');
-    if (target && target.closest('.disclaimer-text')) {
-        e.preventDefault();
-        window.electronAPI.openExternal(target.href);
+// ==========================
+// Locale and Translations
+// ==========================
+async function loadLocale(lang) {
+    const localePath = lang === 'es' ? 'locales/es.json' : 'locales/en.json';
+    const response = await fetch(localePath);
+    if (!response.ok) return;
+    const translations = await response.json();
+    currentTranslations = translations;
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (!translations[key]) return;
+        if (key === 'disclaimerText') {
+            el.innerHTML = translations[key];
+            return;
+        }
+        if (['INPUT', 'SELECT', 'TEXTAREA'].includes(el.tagName)) {
+            el.placeholder = translations[key];
+        } else if (el.children.length === 0) {
+            el.textContent = translations[key];
+        } else {
+            const span = el.querySelector('span');
+            if (span) span.textContent = translations[key];
+        }
+    });
+    const searchInput = document.getElementById('mods-search-input');
+    if (searchInput && translations.modsSearchPlaceholder) {
+        searchInput.placeholder = translations.modsSearchPlaceholder;
     }
-});
+    document.title = translations['title'] || document.title;
+    const launcherTitleEl = document.querySelector('.launcher-title');
+    if (launcherTitleEl && window.electronAPI.getAppVersion) {
+        launcherTitleEl.textContent = currentTranslations.launcherTitle || 'Spore NEXT Launcher';
+        window.electronAPI.getAppVersion().then(version => {
+            launcherTitleEl.innerHTML += ` <span style="color:#aaa;font-size:0.85em;">v${version}</span>`;
+        });
+    }
+    const updatedTextEl = document.querySelector('[data-i18n="updatedText"]');
+    if (updatedTextEl && newVersionAvailable) {
+        updatedTextEl.innerHTML = `${currentTranslations.updateAvailableText} <br><span style="color:#aaa;">${currentTranslations.newVersionLabel || 'New version:'} v${newVersionAvailable}</span>`;
+    }
 
+    sortModsTable();
+}
+
+// ==========================
+// Mod Button Setup and State
+// ==========================
 function setupModButton(modId, options) {
     const btns = document.querySelectorAll(
         `.download-mod-spore-btn[data-mod-id="${modId}"], .download-mod-sporega-btn[data-mod-id="${modId}"]`
@@ -127,7 +189,7 @@ function setupModButton(modId, options) {
                 uninstallFill.style.display = 'block';
                 btn.style.display = 'none';
                 progressBar.style.display = 'block';
-                progressText.textContent = currentTranslations.uninstalling || 'Desinstalando...';
+                progressText.textContent = currentTranslations.uninstalling || 'Uninstalling...';
                 setTimeout(() => uninstallFill.style.width = '100%', 100);
                 setTimeout(async () => {
                     await options.uninstall(gameType);
@@ -175,7 +237,7 @@ function setupModButton(modId, options) {
                     if (progress.installId && progress.installId !== btn.currentInstallId) return;
                     if (btn.style.display === 'none') {
                         if (progressFill) progressFill.style.width = `${progress.percent}%`;
-                        if (progressText) progressText.textContent = `${currentTranslations.downloadingLong || 'Descargando...'} ${progress.percent}%`;
+                        if (progressText) progressText.textContent = `${currentTranslations.downloadingLong || 'Downloading...'} ${progress.percent}%`;
                     }
                 };
                 window.electronAPI.onModDownloadProgress(btn.downloadListener);
@@ -191,7 +253,7 @@ function setupModButton(modId, options) {
                         if (progress.installId && progress.installId !== btn.currentInstallId) return;
                         if (btn.style.display === 'none') {
                             if (progressFill) progressFill.style.width = `${progress.percent}%`;
-                            if (progressText) progressText.textContent = `${currentTranslations.installingLong || 'Instalando...'} ${progress.percent}%`;
+                            if (progressText) progressText.textContent = `${currentTranslations.installingLong || 'Installing...'} ${progress.percent}%`;
                         }
                     };
                     window.electronAPI.onModInstallProgress(btn.installListener);
@@ -201,7 +263,7 @@ function setupModButton(modId, options) {
                         if (!zipPath || progress.zipPath !== zipPath) return;
                         if (btn.style.display === 'none') {
                             if (progressFill) progressFill.style.width = `${progress.percent}%`;
-                            if (progressText) progressText.textContent = `${currentTranslations.installingLong || 'Extrayendo...'} ${progress.percent}%`;
+                            if (progressText) progressText.textContent = `${currentTranslations.installingLong || 'Extracting...'} ${progress.percent}%`;
                         }
                     };
                     window.electronAPI.onModUnzipProgress(btn.unzipListener);
@@ -212,9 +274,9 @@ function setupModButton(modId, options) {
                         await options.install(extractedPath, zipPath, gameType, btn.currentInstallId);
                     } catch (err) {
                         if (err && err.message && err.message.includes('instalación de mod en curso')) {
-                            alert('Ya hay una instalación de mod en curso. Espera a que termine antes de instalar otro.');
+                            alert('A mod installation is already in progress. Please wait for it to finish before installing another.');
                         } else {
-                            alert('Error al instalar el mod:\n' + (err.message || err));
+                            alert('Error installing mod:\n' + (err.message || err));
                         }
                         if (progressFill) progressFill.style.width = '0%';
                         progressText.textContent = '';
@@ -356,7 +418,55 @@ async function updateModButtons() {
     });
 }
 
+// ==========================
+// UI Event Handlers
+// ==========================
+
+// Filter buttons for mod categories
+document.addEventListener('DOMContentLoaded', function () {
+    const filterButtons = document.querySelectorAll('.filter-btn');
+    const modRows = document.querySelectorAll('.mods-table tbody tr');
+    filterButtons.forEach(btn => {
+        btn.addEventListener('click', function () {
+            filterButtons.forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            let filter = this.id.replace('filter-', '');
+            modRows.forEach(row => {
+                if (filter === 'all') {
+                    row.style.display = '';
+                } else {
+                    row.style.display = row.getAttribute('data-category') === filter ? '' : 'none';
+                }
+            });
+        });
+    });
+
+    document.getElementById('filter-all')?.classList.add('active');
+});
+
+// External links in disclaimer
+document.body.addEventListener('click', function (e) {
+    const target = e.target.closest('a');
+    if (target && target.closest('.disclaimer-text')) {
+        e.preventDefault();
+        window.electronAPI.openExternal(target.href);
+    }
+});
+
+// External links with data-external attribute
+document.addEventListener('click', function (e) {
+    const target = e.target.closest('a[data-external]');
+    if (target) {
+        e.preventDefault();
+        window.electronAPI.openExternal(target.href);
+    }
+});
+
+// ==========================
+// Main Launcher Initialization
+// ==========================
 window.addEventListener('DOMContentLoaded', async () => {
+    // Splash screen logic
     const splash = document.getElementById('splash-screen');
     document.body.classList.add('transparent-launcher');
     Array.from(document.body.children).forEach(el => {
@@ -374,6 +484,7 @@ window.addEventListener('DOMContentLoaded', async () => {
     });
     splash.style.display = 'none';
 
+    // Window controls
     document.querySelector('.launcher-header .window-close')?.addEventListener('click', () => window.electronAPI.closeWindow());
     document.getElementById('discord-btn')?.addEventListener('click', () => window.electronAPI.openDiscord());
     document.querySelector('.footer-item img[alt="Kofi"]')?.parentElement.addEventListener('click', () => {
@@ -386,6 +497,7 @@ window.addEventListener('DOMContentLoaded', async () => {
         btn.addEventListener('click', () => window.electronAPI.minimizeWindow())
     );
 
+    // Launcher update button
     document.getElementById('update-launcher-btn')?.addEventListener('click', async function () {
         if (confirm(currentTranslations.updateConfirm)) {
             this.disabled = true;
@@ -397,6 +509,7 @@ window.addEventListener('DOMContentLoaded', async () => {
 
     await updateModButtons();
 
+    // Mod search input
     const searchInput = document.getElementById('mods-search-input');
     if (searchInput) {
         searchInput.addEventListener('input', function () {
@@ -410,8 +523,9 @@ window.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
-    // --- MODALS TOGGLE LOGIC ---
-
+    // ==========================
+    // Modal Toggle Logic
+    // ==========================
     const settingsModal = document.getElementById('settings-modal');
     const settingsModalContent = settingsModal?.querySelector('.mods-modal-content');
     const modsModal = document.getElementById('mods-modal');
@@ -487,6 +601,9 @@ window.addEventListener('DOMContentLoaded', async () => {
         setFooterActive(null);
     });
 
+    // ==========================
+    // Play Buttons
+    // ==========================
     document.querySelector('.play-btn-sporega')?.addEventListener('click', async () => {
         if (!await window.electronAPI.launchSporeModAPI()) alert(currentTranslations.gaLaunchError);
     });
@@ -494,6 +611,9 @@ window.addEventListener('DOMContentLoaded', async () => {
         if (!await window.electronAPI.launchSporeBase()) alert(currentTranslations.sporeLaunchError);
     });
 
+    // ==========================
+    // Language Selector
+    // ==========================
     const langSelect = document.getElementById('lang-select');
     if (langSelect) {
         langSelect.addEventListener('change', async () => {
@@ -509,48 +629,9 @@ window.addEventListener('DOMContentLoaded', async () => {
     }
 });
 
-async function loadLocale(lang) {
-    const localePath = lang === 'es' ? 'locales/es.json' : 'locales/en.json';
-    const response = await fetch(localePath);
-    if (!response.ok) return;
-    const translations = await response.json();
-    currentTranslations = translations;
-    document.querySelectorAll('[data-i18n]').forEach(el => {
-        const key = el.getAttribute('data-i18n');
-        if (!translations[key]) return;
-        if (key === 'disclaimerText') {
-            el.innerHTML = translations[key];
-            return;
-        }
-        if (['INPUT', 'SELECT', 'TEXTAREA'].includes(el.tagName)) {
-            el.placeholder = translations[key];
-        } else if (el.children.length === 0) {
-            el.textContent = translations[key];
-        } else {
-            const span = el.querySelector('span');
-            if (span) span.textContent = translations[key];
-        }
-    });
-    const searchInput = document.getElementById('mods-search-input');
-    if (searchInput && translations.modsSearchPlaceholder) {
-        searchInput.placeholder = translations.modsSearchPlaceholder;
-    }
-    document.title = translations['title'] || document.title;
-    const launcherTitleEl = document.querySelector('.launcher-title');
-    if (launcherTitleEl && window.electronAPI.getAppVersion) {
-        launcherTitleEl.textContent = currentTranslations.launcherTitle || 'Spore NEXT Launcher';
-        window.electronAPI.getAppVersion().then(version => {
-            launcherTitleEl.innerHTML += ` <span style="color:#aaa;font-size:0.85em;">v${version}</span>`;
-        });
-    }
-    const updatedTextEl = document.querySelector('[data-i18n="updatedText"]');
-    if (updatedTextEl && newVersionAvailable) {
-        updatedTextEl.innerHTML = `${currentTranslations.updateAvailableText} <br><span style="color:#aaa;">${currentTranslations.newVersionLabel || 'Nueva versión:'} v${newVersionAvailable}</span>`;
-    }
-
-    sortModsTable();
-}
-
+// ==========================
+// Update and Download Handlers
+// ==========================
 window.electronAPI.onUpdateAvailable((_, version) => {
     newVersionAvailable = version;
     const updatedTextEl = document.querySelector('[data-i18n="updatedText"]');
@@ -570,67 +651,27 @@ window.electronAPI.onUpdateDownloaded?.(() => {
     }
 });
 
+// ==========================
+// IPC Error Handler
+// ==========================
 if (window.require) {
     const { ipcRenderer } = window.require('electron');
     ipcRenderer.on('download-mod-error', (_event, message) => {
-        alert('Error al descargar el mod:\n' + message);
+        alert('Error downloading mod:\n' + message);
     });
 }
 
+// ==========================
+// Extra Actions
+// ==========================
 document.getElementById('extra-action-btn')?.addEventListener('click', async () => {
-    if (confirm(currentTranslations.uninstallAllConfirm || "¿Seguro que quieres desinstalar todos los mods?")) {
+    if (confirm(currentTranslations.uninstallAllConfirm || "Are you sure you want to uninstall all mods?")) {
         const success = await window.electronAPI.uninstallAllMods();
         await updateModButtons();
         if (success) {
-            alert(currentTranslations.uninstallAllSuccess || "Todos los mods han sido desinstalados.");
+            alert(currentTranslations.uninstallAllSuccess || "All mods have been uninstalled.");
         } else {
-            alert(currentTranslations.uninstallAllNone || "No había mods instalados para desinstalar.");
+            alert(currentTranslations.uninstallAllNone || "There were no installed mods to uninstall.");
         }
-    }
-});
-
-function sortModsTable() {
-    document.querySelectorAll('.mods-table').forEach(table => {
-        const categoryOrder = {
-            'optimization': 1,
-            'textures': 2,
-            'overhaul': 3
-        };
-
-        let allRows = [];
-        table.querySelectorAll('tbody tr').forEach(row => {
-            allRows.push(row);
-        });
-
-        allRows.sort((a, b) => {
-            const catA = a.getAttribute('data-category') || '';
-            const catB = b.getAttribute('data-category') || '';
-            const orderA = categoryOrder[catA] || 99;
-            const orderB = categoryOrder[catB] || 99;
-            if (orderA !== orderB) return orderA - orderB;
-            const nameA = (a.querySelector('.mod-main-title')?.textContent || '').trim().toLowerCase();
-            const nameB = (b.querySelector('.mod-main-title')?.textContent || '').trim().toLowerCase();
-            return nameA.localeCompare(nameB, 'en');
-        });
-
-        table.querySelectorAll('tbody').forEach(tbody => {
-            while (tbody.firstChild) tbody.removeChild(tbody.firstChild);
-        });
-
-        allRows.forEach(row => {
-            const cat = row.getAttribute('data-category');
-            let targetTbody = Array.from(table.querySelectorAll('tbody')).find(tb =>
-                tb.querySelector(`tr[data-category="${cat}"]`)
-            ) || table.querySelector('tbody');
-            targetTbody.appendChild(row);
-        });
-    });
-}
-
-document.addEventListener('click', function (e) {
-    const target = e.target.closest('a[data-external]');
-    if (target) {
-        e.preventDefault();
-        window.electronAPI.openExternal(target.href);
     }
 });

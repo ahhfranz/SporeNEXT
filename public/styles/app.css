@@ -1,3 +1,6 @@
+/* =========================
+   Root and Base Styles
+   ========================= */
 html {
     font-size: 16px;
 }
@@ -15,6 +18,9 @@ body {
     user-select: none;
 }
 
+/* =========================
+   Focus Styles
+   ========================= */
 button:focus,
 .filter-btn:focus {
     outline: none !important;
@@ -27,6 +33,9 @@ input:focus {
     border: none !important;
 }
 
+/* =========================
+   Background Video
+   ========================= */
 .background-video {
     position: absolute;
     top: 0;
@@ -38,6 +47,9 @@ input:focus {
     pointer-events: none;
 }
 
+/* =========================
+   Launcher Window Layout
+   ========================= */
 .launcher-window {
     width: 100%;
     height: 100%;
@@ -64,6 +76,9 @@ input:focus {
     border-radius: 8px;
 }
 
+/* =========================
+   Launcher Header
+   ========================= */
 .launcher-header,
 .launcher-content,
 .launcher-footer {
@@ -102,6 +117,9 @@ input:focus {
     margin-right: auto;
 }
 
+/* =========================
+   Window Controls
+   ========================= */
 .window-controls,
 .modal-window-controls {
     position: absolute;
@@ -135,7 +153,7 @@ input:focus {
     height: 22px;
 }
 
-/* Ajustes para SVG */
+/* SVG Adjustments */
 .window-close svg,
 .window-minimize svg,
 .window-maximize svg {
@@ -145,7 +163,7 @@ input:focus {
     fill: none;
 }
 
-/* Hover con colores originales */
+/* Hover Colors */
 .window-close:hover {
     color: #ff4d4f;
 }
@@ -155,6 +173,9 @@ input:focus {
     color: #4d9cff;
 }
 
+/* =========================
+   Launcher Content
+   ========================= */
 .launcher-content {
     flex: 1;
     display: flex;
@@ -180,6 +201,9 @@ input:focus {
     margin-bottom: 24px;
 }
 
+/* =========================
+   Play Buttons
+   ========================= */
 .play-btn-spore-base {
     background: #2884f5;
     color: #fff;
@@ -234,6 +258,9 @@ input:focus {
     -webkit-user-drag: none;
 }
 
+/* =========================
+   Launcher Update Button
+   ========================= */
 #update-launcher-btn {
     display: none;
     margin-top: 20px;
@@ -253,12 +280,18 @@ input:focus {
     box-shadow: 0 4px 16px #327e45;
 }
 
+/* =========================
+   Launcher Buttons Group
+   ========================= */
 .launcher-buttons {
     display: flex;
     gap: 16px;
     justify-content: center;
 }
 
+/* =========================
+   Sidebar
+   ========================= */
 .sidebar-header {
     display: flex;
     align-items: center;
@@ -294,6 +327,9 @@ input:focus {
     box-shadow: 2px 0 8px #0008;
 }
 
+/* =========================
+   Footer
+   ========================= */
 .launcher-footer {
     display: flex;
     flex-direction: column;
@@ -379,6 +415,9 @@ input:focus {
     padding-left: 24px;
 }
 
+/* =========================
+   Mods Modal
+   ========================= */
 .mods-modal {
     position: fixed;
     top: 0;
@@ -573,6 +612,9 @@ input:focus {
     color: #4d9cff;
 }
 
+/* =========================
+   Install Progress Bars
+   ========================= */
 .install-progress {
     width: 100%;
     margin-top: 16px;
@@ -657,6 +699,9 @@ input:focus {
     font-size: 0.95em;
 }
 
+/* =========================
+   Settings Modal
+   ========================= */
 .settings-modal-content {
     min-width: 420px;
     padding: 28px 28px 18px 28px;
@@ -769,6 +814,9 @@ input:focus {
     flex: 1;
 }
 
+/* =========================
+   Mods Table
+   ========================= */
 .mods-table-container {
     width: 100%;
     background: #181818;
@@ -979,6 +1027,9 @@ input:focus {
     justify-content: center;
 }
 
+/* =========================
+   Launcher Logo
+   ========================= */
 .launcher-logo-container {
     width: 100%;
     display: flex;
@@ -993,7 +1044,9 @@ input:focus {
     -webkit-user-drag: none;
 }
 
-
+/* =========================
+   Animations
+   ========================= */
 @keyframes modalFadeIn {
     from {
         opacity: 0;
@@ -1068,6 +1121,9 @@ input:focus {
     }
 }
 
+/* =========================
+   Transparent Launcher Mode
+   ========================= */
 .transparent-launcher,
 .transparent-launcher * {
     background: transparent !important;
@@ -1094,6 +1150,9 @@ body.transparent-launcher #splash-screen {
     display: flex !important;
 }
 
+/* =========================
+   Mods Search Bar & Filters
+   ========================= */
 .mods-search-bar {
     width: 100%;
     display: flex;
@@ -1136,7 +1195,6 @@ body.transparent-launcher #splash-screen {
 .mods-search-bar {
     -webkit-app-region: no-drag;
 }
-
 
 .filters-buttons {
     display: flex;
@@ -1191,6 +1249,9 @@ body.transparent-launcher #splash-screen {
     background: #2d3037;
 }
 
+/* =========================
+   Badges
+   ========================= */
 .badge-style {
     background: #333333;
     border-radius: 5px;
@@ -1214,6 +1275,9 @@ body.transparent-launcher #splash-screen {
     color: #fff;
 }
 
+/* =========================
+   Disclaimer Text
+   ========================= */
 .disclaimer-text {
     white-space: pre-line;
     line-height: 1.6;
@@ -1233,6 +1297,9 @@ body.transparent-launcher #splash-screen {
     color: #8ec1ff;
 }
 
+/* =========================
+   Settings Extra Button
+   ========================= */
 .settings-reset {
     padding: 18px;
     min-height: 80px;
@@ -1268,6 +1335,9 @@ body.transparent-launcher #splash-screen {
     vertical-align: middle;
 }
 
+/* =========================
+   Mod Icons Row
+   ========================= */
 .mod-icons-row {
     margin-top: 5px;
     margin-bottom: 0px;
@@ -1304,7 +1374,9 @@ body.transparent-launcher #splash-screen {
     cursor: pointer;
 }
 
-
+/* =========================
+   Responsive Styles
+   ========================= */
 @media (max-width: 1900px) {
 
     .mods-table thead tr th,

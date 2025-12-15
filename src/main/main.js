@@ -11,21 +11,26 @@ import os from 'os';
 import { fork, spawn, exec } from 'child_process';
 import { parseStringPromise, Builder } from 'xml2js';
 
-function logToFile(...args) {
-    const logPath = path.join(app.getPath('userData'), 'sporenext.log');
-    const msg = `[${new Date().toISOString()}] ` + args.map(a => (typeof a === 'string' ? a : JSON.stringify(a))).join(' ') + '\n';
-    fs.appendFileSync(logPath, msg);
-}
-
-logToFile('Launcher started');
-
-ipcMain.handle('renderer-log', (_e, msg) => {
-    logToFile('[RENDERER]', msg);
-});
-
+// ==========================
+// Globals and State
+// ==========================
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+const { autoUpdater } = pkg;
+const activeDownloads = {};
+const activeZipTasks = {};
+
+let mainWindow = null;
+let isInstalling = false;
+let currentLang = 'en';
+let translations = {};
+
+let isAnyModInstalling = false;
+
+// ==========================
+// Utility Functions
+// ==========================
 function copyFolderRecursiveSync(src, dest) {
     if (!fs.existsSync(dest)) fs.mkdirSync(dest, { recursive: true });
     for (const item of fs.readdirSync(src)) {
@@ -39,6 +44,72 @@ function copyFolderRecursiveSync(src, dest) {
     }
 }
 
+function fileHash(filePath) {
+    const data = fs.readFileSync(filePath);
+    return crypto.createHash('sha256').update(data).digest('hex');
+}
+
+function findAllPackages(dir) {
+    let results = [];
+    const list = fs.readdirSync(dir);
+    for (const file of list) {
+        const filePath = path.join(dir, file);
+        const stat = fs.statSync(filePath);
+        if (stat && stat.isDirectory()) {
+            results = results.concat(findAllPackages(filePath));
+        } else if (file.toLowerCase().endsWith('.package')) {
+            results.push(filePath);
+        }
+    }
+    return results;
+}
+
+function getModById(modId) {
+    const modsJsonPath = app.isPackaged
+        ? path.join(process.resourcesPath, 'resources', 'ModsInstallation', 'mods.json')
+        : path.join(__dirname, '../../resources/ModsInstallation/mods.json');
+    const modsList = JSON.parse(fs.readFileSync(modsJsonPath, 'utf8'));
+    return modsList.find(mod => mod.id === modId);
+}
+
+function findSporemodFile(dir) {
+    const files = fs.readdirSync(dir);
+    for (const file of files) {
+        const fullPath = path.join(dir, file);
+        if (file.endsWith('.sporemod')) return fullPath;
+        if (fs.statSync(fullPath).isDirectory()) {
+            const found = findSporemodFile(fullPath);
+            if (found) return found;
+        }
+    }
+    return null;
+}
+
+async function withInstallLock(fn) {
+    if (isAnyModInstalling) {
+        throw new Error('There is already a mod installation in progress. Please wait until it finishes.');
+    }
+    isAnyModInstalling = true;
+    try {
+        const result = await fn();
+        return result;
+    } finally {
+        isAnyModInstalling = false;
+    }
+}
+
+function loadTranslations(lang) {
+    const localePath = path.join(__dirname, '../../public/locales', lang + '.json');
+    try {
+        translations = JSON.parse(fs.readFileSync(localePath, 'utf8'));
+    } catch {
+        translations = {};
+    }
+}
+
+// ==========================
+// Initial Setup
+// ==========================
 const appdataSporeModAPI = path.join(process.env.APPDATA, 'Spore ModAPI');
 const devSporeModAPI = path.join(__dirname, '../../resources/SporeModAPI');
 if (
@@ -49,35 +120,14 @@ if (
 }
 
 app.setName('Spore NEXT');
-
 app.commandLine.appendSwitch('disable-background-timer-throttling');
 app.commandLine.appendSwitch('disable-renderer-backgrounding');
 
-const { autoUpdater } = pkg;
-const activeDownloads = {};
-const activeZipTasks = {};
-
-let mainWindow = null;
-let isInstalling = false;
-let currentLang = 'en';
-let translations = {};
-
-
-
-function loadTranslations(lang) {
-    const localePath = path.join(__dirname, '../../public/locales', lang + '.json');
-    try {
-        translations = JSON.parse(fs.readFileSync(localePath, 'utf8'));
-    } catch {
-        translations = {};
-    }
-}
-ipcMain.handle('set-language', (_e, lang) => {
-    currentLang = lang;
-    loadTranslations(lang);
-});
 loadTranslations(currentLang);
 
+// ==========================
+// Window Creation
+// ==========================
 function createWindow() {
     mainWindow = new BrowserWindow({
         width: 1360,
@@ -100,8 +150,6 @@ function createWindow() {
     mainWindow.loadFile(path.join(__dirname, '../../public/index.html'));
 
     mainWindow.webContents.setBackgroundThrottling(false);
-
-    mainWindow.webContents.on('did-finish-load', () => { });
 
     mainWindow.webContents.on('before-input-event', (event, input) => {
         if (input.key === 'F11') {
@@ -142,6 +190,9 @@ function createWindow() {
     });
 }
 
+// ==========================
+// App Events
+// ==========================
 app.on('ready', () => {
     createWindow();
     autoUpdater.autoDownload = false;
@@ -156,6 +207,9 @@ app.on('ready', () => {
 app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(); });
 app.on('activate', () => { if (!mainWindow) createWindow(); });
 
+// ==========================
+// IPC: Window Controls & External Links
+// ==========================
 ipcMain.handle('close-window', () => mainWindow?.close());
 ipcMain.handle('maximize-window', () => {
     if (mainWindow) {
@@ -176,8 +230,17 @@ ipcMain.handle('open-discord', () => shell.openExternal('https://discord.gg/JqZy
 ipcMain.handle('open-kofi', () => shell.openExternal('https://ko-fi.com/franzlabs'));
 ipcMain.handle('open-external', (_e, url) => shell.openExternal(url));
 
-ipcMain.handle('set-installing', (_e, installing) => { isInstalling = !!installing; });
+// ==========================
+// IPC: Language & Translations
+// ==========================
+ipcMain.handle('set-language', (_e, lang) => {
+    currentLang = lang;
+    loadTranslations(lang);
+});
 
+// ==========================
+// IPC: App Version & Updates
+// ==========================
 ipcMain.handle('download-update', async () => {
     try {
         await autoUpdater.downloadUpdate();
@@ -186,17 +249,18 @@ ipcMain.handle('download-update', async () => {
         return false;
     }
 });
-
 ipcMain.handle('get-app-version', () => {
     const pkgPath = path.join(__dirname, '../../package.json');
     const pkgJson = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
     return pkgJson.version;
 });
-
 ipcMain.on('quit-and-install', () => {
     autoUpdater.quitAndInstall();
 });
 
+// ==========================
+// IPC: Dialogs
+// ==========================
 ipcMain.handle('show-confirm', async (_e, options) => {
     const result = await dialog.showMessageBox(mainWindow, {
         type: 'question',
@@ -209,6 +273,49 @@ ipcMain.handle('show-confirm', async (_e, options) => {
     return result.response === 0;
 });
 
+// ==========================
+// IPC: Spore Installations
+// ==========================
+async function findSporeInstallations() {
+    const regKeys = [
+        { hive: WinReg.HKLM, key: '\\SOFTWARE\\Wow6432Node\\Electronic Arts\\SPORE', type: 'base' },
+        { hive: WinReg.HKLM, key: '\\SOFTWARE\\Electronic Arts\\SPORE', type: 'base' },
+        { hive: WinReg.HKLM, key: '\\SOFTWARE\\Wow6432Node\\Electronic Arts\\SPORE_EP1', type: 'ga' },
+        { hive: WinReg.HKLM, key: '\\SOFTWARE\\Electronic Arts\\SPORE_EP1', type: 'ga' }
+    ];
+    let installs = [];
+    for (const reg of regKeys) {
+        try {
+            const regKey = new WinReg({ hive: reg.hive, key: reg.key });
+            const datadir = await new Promise(resolve => {
+                regKey.get('datadir', (err, item) => {
+                    if (!err && item && item.value) resolve(item.value.replace(/"/g, ''));
+                    else resolve(null);
+                });
+            });
+            if (datadir && fs.existsSync(datadir)) {
+                installs.push({ type: reg.type, datadir });
+            }
+        } catch { }
+    }
+    return installs;
+}
+
+ipcMain.handle('get-spore-installations', async () => {
+    return await findSporeInstallations();
+});
+ipcMain.handle('has-spore-base', async () => {
+    const installs = await findSporeInstallations();
+    return installs.some(i => i.type === 'base');
+});
+ipcMain.handle('has-spore-ga', async () => {
+    const installs = await findSporeInstallations();
+    return installs.some(i => i.type === 'ga');
+});
+
+// ==========================
+// IPC: Download Mod With Progress
+// ==========================
 ipcMain.handle('download-mod-with-progress', async (_event, url, gameType, installId) => {
     const urlObj = new URL(url);
     let fileId = urlObj.searchParams.get('id');
@@ -234,7 +341,7 @@ ipcMain.handle('download-mod-with-progress', async (_event, url, gameType, insta
                     },
                     agent
                 });
-                if (!res.ok) throw new Error('No se pudo descargar el mod: ' + res.status + ' ' + res.statusText);
+                if (!res.ok) throw new Error('Could not download mod: ' + res.status + ' ' + res.statusText);
 
                 const total = Number(res.headers.get('content-length')) || 0;
                 let downloaded = 0;
@@ -258,7 +365,6 @@ ipcMain.handle('download-mod-with-progress', async (_event, url, gameType, insta
                                 installId: activeZipTasks[fileId][0]?.installId
                             });
                         }
-
                     });
                     res.body.pipe(fileStream);
                     fileStream.on('finish', () => {
@@ -305,67 +411,61 @@ ipcMain.handle('download-mod-with-progress', async (_event, url, gameType, insta
     return downloadPromise;
 });
 
-function findAllPackages(dir) {
-    let results = [];
-    const list = fs.readdirSync(dir);
-    for (const file of list) {
-        const filePath = path.join(dir, file);
-        const stat = fs.statSync(filePath);
-        if (stat && stat.isDirectory()) {
-            results = results.concat(findAllPackages(filePath));
-        } else if (file.toLowerCase().endsWith('.package')) {
-            results.push(filePath);
-        }
-    }
-    return results;
-}
-
-async function findSporeInstallations() {
-    const regKeys = [
-        { hive: WinReg.HKLM, key: '\\SOFTWARE\\Wow6432Node\\Electronic Arts\\SPORE', type: 'base' },
-        { hive: WinReg.HKLM, key: '\\SOFTWARE\\Electronic Arts\\SPORE', type: 'base' },
-        { hive: WinReg.HKLM, key: '\\SOFTWARE\\Wow6432Node\\Electronic Arts\\SPORE_EP1', type: 'ga' },
-        { hive: WinReg.HKLM, key: '\\SOFTWARE\\Electronic Arts\\SPORE_EP1', type: 'ga' }
-    ];
-    let installs = [];
-    for (const reg of regKeys) {
-        try {
-            const regKey = new WinReg({ hive: reg.hive, key: reg.key });
-            const datadir = await new Promise(resolve => {
-                regKey.get('datadir', (err, item) => {
-                    if (!err && item && item.value) resolve(item.value.replace(/"/g, ''));
-                    else resolve(null);
-                });
-            });
-            if (datadir && fs.existsSync(datadir)) {
-                installs.push({ type: reg.type, datadir });
+// ==========================
+// IPC: Unzip Handlers
+// ==========================
+ipcMain.handle('unzip-mod', async (_e, zipPath) => {
+    const extractPath = zipPath.replace(/\.zip$/i, '');
+    return await new Promise((resolve, reject) => {
+        const child = fork(path.join(__dirname, 'unzip-child.js'), [zipPath, extractPath], { stdio: ['inherit', 'inherit', 'inherit', 'ipc'] });
+        child.on('message', (msg) => {
+            if (msg.success) {
+                resolve(extractPath);
+            } else {
+                reject(new Error(msg.error || 'Error extracting'));
             }
-        } catch { }
-    }
-    return installs;
-}
-
-ipcMain.handle('get-spore-installations', async () => {
-    return await findSporeInstallations();
+        });
+        child.on('error', (err) => reject(err));
+        child.on('exit', (code) => {
+            if (code !== 0) reject(new Error('Error extracting (exit code ' + code + ')'));
+        });
+    });
 });
 
-ipcMain.handle('has-spore-base', async () => {
-    const installs = await findSporeInstallations();
-    return installs.some(i => i.type === 'base');
-});
-ipcMain.handle('has-spore-ga', async () => {
-    const installs = await findSporeInstallations();
-    return installs.some(i => i.type === 'ga');
+ipcMain.handle('unzip-mod-to', async (_e, zipPath, extractPath) => {
+    return await new Promise((resolve, reject) => {
+        const child = fork(path.join(__dirname, 'unzip-child.js'), [zipPath, extractPath], { stdio: ['inherit', 'inherit', 'inherit', 'ipc'] });
+        child.on('message', (msg) => {
+            if (msg.progress !== undefined && mainWindow) {
+                mainWindow.webContents.send('mod-unzip-progress', {
+                    zipPath,
+                    extractPath,
+                    percent: msg.progress
+                });
+            }
+            if (msg.success) {
+                resolve(extractPath);
+            } else if (msg.error) {
+                reject(new Error(msg.error || 'Error extracting'));
+            }
+        });
+        child.on('error', (err) => reject(err));
+        child.on('exit', (code) => {
+            if (code !== 0) reject(new Error('Error extracting (exit code ' + code + ')'));
+        });
+    });
 });
 
-// --------- MODS: Install, Verify, Uninstall ---------
+// ==========================
+// IPC: Mod Install/Uninstall/Verify Handlers
+// ==========================
 
 // HD Textures
 ipcMain.handle('install-hdtextures', async (_e, extractedPath, zipPath, gameType, installId) =>
     withInstallLock(async () => {
         const installs = await findSporeInstallations();
         const install = installs.find(i => i.type === gameType);
-        if (!install) throw new Error('No se encontró la instalación de Spore seleccionada.');
+        if (!install) throw new Error('Could not find the selected Spore installation.');
 
         let dataDir;
         if (gameType === 'ga') {
@@ -498,7 +598,7 @@ ipcMain.handle('install-4gbpatch', async (_e, extractedPath, zipPath, gameType) 
     withInstallLock(async () => {
         const installs = await findSporeInstallations();
         const install = installs.find(i => i.type === gameType);
-        if (!install) throw new Error('No se encontró la instalación de Spore seleccionada.');
+        if (!install) throw new Error('Could not find the selected Spore installation.');
 
         let binDir;
         if (gameType === 'ga') {
@@ -506,7 +606,7 @@ ipcMain.handle('install-4gbpatch', async (_e, extractedPath, zipPath, gameType) 
         } else {
             binDir = path.join(path.dirname(install.datadir), 'Sporebin');
         }
-        if (!fs.existsSync(binDir)) throw new Error('No se encontró la carpeta Sporebin.');
+        if (!fs.existsSync(binDir)) throw new Error('Could not find Sporebin folder.');
 
         const originalExe = path.join(binDir, 'SporeApp.exe');
         const backupExe = path.join(binDir, 'SporeApp-backup.exe');
@@ -516,7 +616,7 @@ ipcMain.handle('install-4gbpatch', async (_e, extractedPath, zipPath, gameType) 
         }
 
         const patchExe = fs.readdirSync(extractedPath).find(f => f.toLowerCase() === 'sporeapp.exe');
-        if (!patchExe) throw new Error('No se encontró SporeApp.exe en el parche.');
+        if (!patchExe) throw new Error('Could not find SporeApp.exe in the patch.');
         const patchExePath = path.join(extractedPath, patchExe);
 
         fs.copyFileSync(patchExePath, originalExe);
@@ -539,12 +639,6 @@ ipcMain.handle('install-4gbpatch', async (_e, extractedPath, zipPath, gameType) 
         return true;
     })
 );
-
-
-function fileHash(filePath) {
-    const data = fs.readFileSync(filePath);
-    return crypto.createHash('sha256').update(data).digest('hex');
-}
 
 ipcMain.handle('is-4gbpatch-installed', async (_e, gameType) => {
     const installs = await findSporeInstallations();
@@ -589,7 +683,7 @@ ipcMain.handle('install-sporemod', async (_e, extractedPath, zipPath, gameType) 
     withInstallLock(async () => {
         const installs = await findSporeInstallations();
         const install = installs.find(i => i.type === gameType);
-        if (!install) throw new Error('No se encontró la instalación de Spore seleccionada.');
+        if (!install) throw new Error('Could not find the selected Spore installation.');
 
         let configDir;
         if (gameType === 'ga') {
@@ -669,297 +763,14 @@ ipcMain.handle('uninstall-unlock60fps', async (_e, gameType) => {
     return removed;
 });
 
-// --------- UNZIP ---------
-
-ipcMain.handle('unzip-mod', async (_e, zipPath) => {
-    const extractPath = zipPath.replace(/\.zip$/i, '');
-    return await new Promise((resolve, reject) => {
-        const child = fork(path.join(__dirname, 'unzip-child.js'), [zipPath, extractPath], { stdio: ['inherit', 'inherit', 'inherit', 'ipc'] });
-        child.on('message', (msg) => {
-            if (msg.success) {
-                resolve(extractPath);
-            } else {
-                reject(new Error(msg.error || 'Error al descomprimir'));
-            }
-        });
-        child.on('error', (err) => reject(err));
-        child.on('exit', (code) => {
-            if (code !== 0) reject(new Error('Error al descomprimir (exit code ' + code + ')'));
-        });
-    });
-});
-
-ipcMain.handle('unzip-mod-to', async (_e, zipPath, extractPath) => {
-    return await new Promise((resolve, reject) => {
-        const child = fork(path.join(__dirname, 'unzip-child.js'), [zipPath, extractPath], { stdio: ['inherit', 'inherit', 'inherit', 'ipc'] });
-        child.on('message', (msg) => {
-            if (msg.progress !== undefined && mainWindow) {
-                mainWindow.webContents.send('mod-unzip-progress', {
-                    zipPath,
-                    extractPath,
-                    percent: msg.progress
-                });
-            }
-            if (msg.success) {
-                resolve(extractPath);
-            } else if (msg.error) {
-                reject(new Error(msg.error || 'Error al descomprimir'));
-            }
-        });
-        child.on('error', (err) => reject(err));
-        child.on('exit', (code) => {
-            if (code !== 0) reject(new Error('Error al descomprimir (exit code ' + code + ')'));
-        });
-    });
-});
-
-// --------- LAUNCH SPORE ---------
-
-async function findSporeBaseExe() {
-    const regKeys = [
-        { hive: WinReg.HKLM, key: '\\SOFTWARE\\Wow6432Node\\Electronic Arts\\SPORE' },
-        { hive: WinReg.HKLM, key: '\\SOFTWARE\\Electronic Arts\\SPORE' }
-    ];
-    for (const reg of regKeys) {
-        try {
-            const regKey = new WinReg({ hive: reg.hive, key: reg.key });
-            const datadir = await new Promise(resolve => {
-                regKey.get('datadir', (err, item) => {
-                    if (!err && item && item.value) resolve(item.value.replace(/"/g, ''));
-                    else resolve(null);
-                });
-            });
-            if (datadir) {
-                const baseDir = datadir.replace(/\\Data\\?$/i, '');
-                const exePath = path.join(baseDir, 'Sporebin', 'SporeApp.exe');
-                if (fs.existsSync(exePath)) return exePath;
-            }
-        } catch { }
-    }
-    return null;
-}
-
-ipcMain.handle('launch-spore-base', async () => {
-    try {
-        exec('start steam://run/17390');
-        return true;
-    } catch (e) {
-        return false;
-    }
-});
-
-
-ipcMain.handle('launch-spore-modapi', async () => {
-    const modapiPath = path.join(os.homedir(), 'AppData', 'Roaming', 'Spore ModAPI', 'Spore ModAPI Launcher.exe');
-    try {
-        spawn('explorer.exe', [modapiPath], { detached: true, stdio: 'ignore' }).unref();
-        return true;
-    } catch (e) {
-        return false;
-    }
-});
-
-
-// --------- SINGLE INSTALLATION ---------
-
-let isAnyModInstalling = false;
-
-async function withInstallLock(fn) {
-    if (isAnyModInstalling) {
-        throw new Error('There is already a mod installation in progress. Please wait until it finishes.');
-    }
-    isAnyModInstalling = true;
-    try {
-        const result = await fn();
-        return result;
-    } finally {
-        isAnyModInstalling = false;
-    }
-}
-
-
-// --------- UNINSTALL ALL MODS ---------
-
-ipcMain.handle('uninstall-all-mods', async () => {
-    try {
-        let removedAny = false;
-        const installs = await findSporeInstallations();
-
-        // --------- HD Textures, 60fps, 4GB Patch ---------
-        for (const install of installs) {
-            // HD Textures
-            let dataDir;
-            if (install.type === 'ga') {
-                dataDir = install.datadir.toLowerCase().endsWith('dataep1')
-                    ? install.datadir
-                    : path.join(path.dirname(install.datadir), 'DataEP1');
-            } else {
-                dataDir = install.datadir.toLowerCase().endsWith('data')
-                    ? install.datadir
-                    : path.join(path.dirname(install.datadir), 'Data');
-            }
-            const hdFiles = [
-                'MOD_HD_Water.package',
-                'MOD_HD_Textures3.package',
-                'MOD_HD_Textures2.package',
-                'MOD_HD_Textures1.package',
-                'MOD_HD_Planet-textures.package',
-                'MOD_HD_Parts.package',
-                'MOD_HD_Particles.package',
-                'MOD_HD_Meshes2.package',
-                'MOD_HD_Meshes.package',
-                'MOD_HD_LOD-High.package',
-                'MOD_HD_Ground.package',
-                'MOD_HD_Galaxy.package',
-                'MOD_HD_Empire-backgrounds.package',
-                'MOD_HD_Editor-background.package',
-                'MOD_HD_Decals.package',
-                'MOD_HD_Background.package'
-            ];
-            for (const file of hdFiles) {
-                const filePath = path.join(dataDir, file);
-                if (fs.existsSync(filePath)) {
-                    fs.unlinkSync(filePath);
-                    removedAny = true;
-                }
-            }
-            // 60fps unlocker
-            let configDir;
-            if (install.type === 'ga') {
-                configDir = path.join(path.dirname(install.datadir), 'DataEP1', 'Config');
-            } else {
-                configDir = path.join(path.dirname(install.datadir), 'Data', 'Config');
-            }
-            const unlockerFiles = ['ConfigManager.txt', 'Properties.txt'];
-            for (const file of unlockerFiles) {
-                const filePath = path.join(configDir, file);
-                if (fs.existsSync(filePath)) {
-                    fs.unlinkSync(filePath);
-                    removedAny = true;
-                }
-            }
-            // 4GB Patch
-            let binDir;
-            if (install.type === 'ga') {
-                binDir = path.join(path.dirname(install.datadir), 'SporebinEP1');
-            } else {
-                binDir = path.join(path.dirname(install.datadir), 'Sporebin');
-            }
-            const originalExe = path.join(binDir, 'SporeApp.exe');
-            const backupExe = path.join(binDir, 'SporeApp-backup.exe');
-            try {
-                if (
-                    fs.existsSync(originalExe) &&
-                    fs.existsSync(backupExe) &&
-                    fileHash(originalExe) !== fileHash(backupExe)
-                ) {
-                    fs.unlinkSync(originalExe);
-                    fs.renameSync(backupExe, originalExe);
-                    removedAny = true;
-                }
-            } catch { }
-        }
-
-        // --------- SporeModAPI Mods ---------
-        const modsJsonPath = app.isPackaged
-            ? path.join(process.resourcesPath, 'resources', 'ModsInstallation', 'mods.json')
-            : path.join(__dirname, '../../resources/ModsInstallation/mods.json');
-        const modsList = JSON.parse(fs.readFileSync(modsJsonPath, 'utf8'));
-
-        const mLibsPath = path.join(process.env.APPDATA, 'Spore ModAPI', 'mLibs');
-        if (fs.existsSync(mLibsPath)) {
-            const files = fs.readdirSync(mLibsPath);
-            for (const mod of modsList) {
-                if (!mod.dll) continue;
-                const baseName = mod.dll;
-                files.forEach(f => {
-                    if (f.startsWith(baseName)) {
-                        try {
-                            fs.unlinkSync(path.join(mLibsPath, f));
-                            removedAny = true;
-                        } catch (err) { }
-                    }
-                });
-            }
-        }
-
-        for (const mod of modsList) {
-            if (!mod.package) continue;
-            for (const install of installs) {
-                let dataDir = null;
-                if (install.type === 'ga') {
-                    dataDir = install.datadir.toLowerCase().endsWith('dataep1')
-                        ? install.datadir
-                        : path.join(path.dirname(install.datadir), 'DataEP1');
-                }
-                if (dataDir) {
-                    const packagePath = path.join(dataDir, mod.package);
-                    if (fs.existsSync(packagePath)) {
-                        try {
-                            fs.unlinkSync(packagePath);
-                            removedAny = true;
-                        } catch (err) { }
-                    }
-                }
-            }
-        }
-
-        const modConfigsPath = path.join(process.env.APPDATA, 'Spore ModAPI', 'ModConfigs');
-        if (fs.existsSync(modConfigsPath)) {
-            fs.rmSync(modConfigsPath, { recursive: true, force: true });
-            removedAny = true;
-        }
-
-        const installedModsConfigPath = path.join(process.env.APPDATA, 'Spore ModAPI', 'InstalledMods.config');
-        if (fs.existsSync(installedModsConfigPath)) {
-            try {
-                const builder = new Builder();
-                const newXml = builder.buildObject({ InstalledMods: {} });
-                fs.writeFileSync(installedModsConfigPath, newXml, 'utf8');
-            } catch (err) { }
-        }
-
-        const modsPath = path.join(app.getPath('userData'), 'mods');
-        if (fs.existsSync(modsPath)) {
-            fs.rmSync(modsPath, { recursive: true, force: true });
-            removedAny = true;
-        }
-        return removedAny;
-    } catch (err) {
-        return false;
-    }
-});
-
-
-// Spore ModAPI
-
-function getModById(modId) {
-    const modsJsonPath = app.isPackaged
-        ? path.join(process.resourcesPath, 'resources', 'ModsInstallation', 'mods.json')
-        : path.join(__dirname, '../../resources/ModsInstallation/mods.json');
-    const modsList = JSON.parse(fs.readFileSync(modsJsonPath, 'utf8'));
-    return modsList.find(mod => mod.id === modId);
-}
-function findSporemodFile(dir) {
-    const files = fs.readdirSync(dir);
-    for (const file of files) {
-        const fullPath = path.join(dir, file);
-        if (file.endsWith('.sporemod')) return fullPath;
-        if (fs.statSync(fullPath).isDirectory()) {
-            const found = findSporemodFile(fullPath);
-            if (found) return found;
-        }
-    }
-    return null;
-}
-
+// SporeModAPI Mods
 ipcMain.handle('install-sporemodapi-mod', async (_e, modId, extractedPath, zipPath, gameType) =>
     withInstallLock(async () => {
         const mod = getModById(modId);
-        if (!mod) throw new Error('Mod no encontrado');
+        if (!mod) throw new Error('Mod not found');
 
         const sporemodPath = findSporemodFile(extractedPath);
-        if (!sporemodPath) throw new Error('No se encontró el archivo .sporemod en el paquete');
+        if (!sporemodPath) throw new Error('Could not find .sporemod file in the package');
 
         let installerPath;
         if (app.isPackaged) {
@@ -1045,7 +856,6 @@ ipcMain.handle('is-sporemodapi-mod-installed', async (_e, modId) => {
     return false;
 });
 
-
 ipcMain.handle('uninstall-sporemodapi-mod', async (_e, modId) => {
     const mod = getModById(modId);
     if (!mod) {
@@ -1128,4 +938,179 @@ ipcMain.handle('uninstall-sporemodapi-mod', async (_e, modId) => {
     }
 
     return removedAny;
-}); 
+});
+
+// ==========================
+// IPC: Uninstall All Mods
+// ==========================
+ipcMain.handle('uninstall-all-mods', async () => {
+    try {
+        let removedAny = false;
+        const installs = await findSporeInstallations();
+
+        // HD Textures, 60fps, 4GB Patch
+        for (const install of installs) {
+            // HD Textures
+            let dataDir;
+            if (install.type === 'ga') {
+                dataDir = install.datadir.toLowerCase().endsWith('dataep1')
+                    ? install.datadir
+                    : path.join(path.dirname(install.datadir), 'DataEP1');
+            } else {
+                dataDir = install.datadir.toLowerCase().endsWith('data')
+                    ? install.datadir
+                    : path.join(path.dirname(install.datadir), 'Data');
+            }
+            const hdFiles = [
+                'MOD_HD_Water.package',
+                'MOD_HD_Textures3.package',
+                'MOD_HD_Textures2.package',
+                'MOD_HD_Textures1.package',
+                'MOD_HD_Planet-textures.package',
+                'MOD_HD_Parts.package',
+                'MOD_HD_Particles.package',
+                'MOD_HD_Meshes2.package',
+                'MOD_HD_Meshes.package',
+                'MOD_HD_LOD-High.package',
+                'MOD_HD_Ground.package',
+                'MOD_HD_Galaxy.package',
+                'MOD_HD_Empire-backgrounds.package',
+                'MOD_HD_Editor-background.package',
+                'MOD_HD_Decals.package',
+                'MOD_HD_Background.package'
+            ];
+            for (const file of hdFiles) {
+                const filePath = path.join(dataDir, file);
+                if (fs.existsSync(filePath)) {
+                    fs.unlinkSync(filePath);
+                    removedAny = true;
+                }
+            }
+            // 60fps unlocker
+            let configDir;
+            if (install.type === 'ga') {
+                configDir = path.join(path.dirname(install.datadir), 'DataEP1', 'Config');
+            } else {
+                configDir = path.join(path.dirname(install.datadir), 'Data', 'Config');
+            }
+            const unlockerFiles = ['ConfigManager.txt', 'Properties.txt'];
+            for (const file of unlockerFiles) {
+                const filePath = path.join(configDir, file);
+                if (fs.existsSync(filePath)) {
+                    fs.unlinkSync(filePath);
+                    removedAny = true;
+                }
+            }
+            // 4GB Patch
+            let binDir;
+            if (install.type === 'ga') {
+                binDir = path.join(path.dirname(install.datadir), 'SporebinEP1');
+            } else {
+                binDir = path.join(path.dirname(install.datadir), 'Sporebin');
+            }
+            const originalExe = path.join(binDir, 'SporeApp.exe');
+            const backupExe = path.join(binDir, 'SporeApp-backup.exe');
+            try {
+                if (
+                    fs.existsSync(originalExe) &&
+                    fs.existsSync(backupExe) &&
+                    fileHash(originalExe) !== fileHash(backupExe)
+                ) {
+                    fs.unlinkSync(originalExe);
+                    fs.renameSync(backupExe, originalExe);
+                    removedAny = true;
+                }
+            } catch { }
+        }
+
+        // SporeModAPI Mods
+        const modsJsonPath = app.isPackaged
+            ? path.join(process.resourcesPath, 'resources', 'ModsInstallation', 'mods.json')
+            : path.join(__dirname, '../../resources/ModsInstallation/mods.json');
+        const modsList = JSON.parse(fs.readFileSync(modsJsonPath, 'utf8'));
+
+        const mLibsPath = path.join(process.env.APPDATA, 'Spore ModAPI', 'mLibs');
+        if (fs.existsSync(mLibsPath)) {
+            const files = fs.readdirSync(mLibsPath);
+            for (const mod of modsList) {
+                if (!mod.dll) continue;
+                const baseName = mod.dll;
+                files.forEach(f => {
+                    if (f.startsWith(baseName)) {
+                        try {
+                            fs.unlinkSync(path.join(mLibsPath, f));
+                            removedAny = true;
+                        } catch (err) { }
+                    }
+                });
+            }
+        }
+
+        for (const mod of modsList) {
+            if (!mod.package) continue;
+            for (const install of installs) {
+                let dataDir = null;
+                if (install.type === 'ga') {
+                    dataDir = install.datadir.toLowerCase().endsWith('dataep1')
+                        ? install.datadir
+                        : path.join(path.dirname(install.datadir), 'DataEP1');
+                }
+                if (dataDir) {
+                    const packagePath = path.join(dataDir, mod.package);
+                    if (fs.existsSync(packagePath)) {
+                        try {
+                            fs.unlinkSync(packagePath);
+                            removedAny = true;
+                        } catch (err) { }
+                    }
+                }
+            }
+        }
+
+        const modConfigsPath = path.join(process.env.APPDATA, 'Spore ModAPI', 'ModConfigs');
+        if (fs.existsSync(modConfigsPath)) {
+            fs.rmSync(modConfigsPath, { recursive: true, force: true });
+            removedAny = true;
+        }
+
+        const installedModsConfigPath = path.join(process.env.APPDATA, 'Spore ModAPI', 'InstalledMods.config');
+        if (fs.existsSync(installedModsConfigPath)) {
+            try {
+                const builder = new Builder();
+                const newXml = builder.buildObject({ InstalledMods: {} });
+                fs.writeFileSync(installedModsConfigPath, newXml, 'utf8');
+            } catch (err) { }
+        }
+
+        const modsPath = path.join(app.getPath('userData'), 'mods');
+        if (fs.existsSync(modsPath)) {
+            fs.rmSync(modsPath, { recursive: true, force: true });
+            removedAny = true;
+        }
+        return removedAny;
+    } catch (err) {
+        return false;
+    }
+});
+
+// ==========================
+// IPC: Launch Spore
+// ==========================
+ipcMain.handle('launch-spore-base', async () => {
+    try {
+        exec('start steam://run/17390');
+        return true;
+    } catch (e) {
+        return false;
+    }
+});
+
+ipcMain.handle('launch-spore-modapi', async () => {
+    const modapiPath = path.join(os.homedir(), 'AppData', 'Roaming', 'Spore ModAPI', 'Spore ModAPI Launcher.exe');
+    try {
+        spawn('explorer.exe', [modapiPath], { detached: true, stdio: 'ignore' }).unref();
+        return true;
+    } catch (e) {
+        return false;
+    }
+});

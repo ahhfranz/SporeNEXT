@@ -4,6 +4,9 @@ import path from "path";
 
 const [, , zipPath, extractPath] = process.argv;
 
+// ==========================
+// Extract ZIP Utility
+// ==========================
 function extractZip(zipPath, extractPath) {
     return new Promise((resolve, reject) => {
         yauzl.open(zipPath, { lazyEntries: true }, async (err, zipfile) => {
@@ -13,7 +16,6 @@ function extractZip(zipPath, extractPath) {
 
             let totalEntries = zipfile.entryCount || 0;
             let extractedEntries = 0;
-
             let lastProgressUpdate = Date.now();
 
             function sendProgress() {
@@ -74,6 +76,9 @@ function extractZip(zipPath, extractPath) {
     });
 }
 
+// ==========================
+// Main Extraction Handler
+// ==========================
 (async () => {
     try {
         await extractZip(zipPath, extractPath);
