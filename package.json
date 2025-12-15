@@ -61,7 +61,7 @@
       "target": "nsis",
       "icon": "public/assets/spore-logo.png",
       "artifactName": "Spore-NEXT-Setup-${version}.${ext}",
-      "requestedExecutionLevel": "requireAdministrator"
+      "requestedExecutionLevel": "requireAdministrator "
     },
     "nsis": {
       "oneClick": false,
