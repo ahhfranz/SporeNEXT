@@ -66,4 +66,4 @@ Contributions are welcome! Feel free to fork the repository, submit issues, or s
 * **Nutyo**
 * **paranoid_modder**
 
-Thank you for helping make Spore better! 
+Thank you for helping make Spore better!
