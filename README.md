@@ -6,6 +6,8 @@ Originally created just to install an HD Textures mod pack, the launcher has evo
 This project is fully non-profit and built as part of my learning journey with JavaScript and Electron.js.
 It’s still an early release, so some bugs may appear — updates and fixes will be rolled out continuously based on community feedback.
 
+🎥 [Preview](https://www.youtube.com/watch?v=Di0U4Lv81_g)
+
 ---
 
 ## 📆 Features
