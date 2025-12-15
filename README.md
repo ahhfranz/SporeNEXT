@@ -10,11 +10,13 @@ It’s still an early release, so some bugs may appear — updates and fixes wil
 
 ## 📆 Features
 
+* ✅ **Expandable mod catalog** with ongoing additions.
 * ✅ **One-click installation** of HD textures, enhanced lighting, and gameplay tweaks.
-* ✅ **60 FPS unlock** (from the original 30 FPS cap).
 * ✅ **Simple mod uninstallation** with just one click.
+* ✅ **Integrated SporeModAPI Easy Installer** for compatible mods.
 * ✅ **Multilanguage support:** Spanish and English.
-* ✅ **Modern and intuitive interface.**
+* ✅ **Modern, clean, and intuitive interface** designed for ease of use.
+* ✅ **Author credits preserved** for all mods.
  
 ---
 
@@ -24,10 +26,6 @@ It’s still an early release, so some bugs may appear — updates and fixes wil
 
 * Windows 10 or higher.
 * A legitimate copy of **Spore** or **Spore: Galactic Adventures** (Steam).
-
-### Uninstallation
-
-To uninstall the mods, simply click the **Uninstall Mods** button in the launcher — your game will revert to its original state.
 
 ---
 
@@ -56,14 +54,3 @@ This application was developed **non-commercially**, as a personal project to:
 Contributions are welcome! Feel free to fork the repository, submit issues, or suggest improvements via pull requests.
 
 ---
-
-## 🎉 Special Thanks
-
-* **Spore Modding Community** for all the tools, resources, and continued support.
-* **EMD**
-* **Mrs. White**
-* **Insanegrox**
-* **Nutyo**
-* **paranoid_modder**
-
-Thank you for helping make Spore better!
