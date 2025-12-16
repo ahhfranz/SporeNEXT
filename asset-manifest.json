@@ -1,0 +1,19 @@
+{
+  "files": {
+    "main.css": "/static/css/main.ada0c300.css",
+    "main.js": "/static/js/main.367ea05c.js",
+    "static/js/453.7756090b.chunk.js": "/static/js/453.7756090b.chunk.js",
+    "static/media/spore-next-logo.png": "/static/media/spore-next-logo.5a83f9db06895ee7a552.png",
+    "static/media/wallpaper.png": "/static/media/wallpaper.e93d92cdb6438443285d.png",
+    "static/media/spore-next-emblem.png": "/static/media/spore-next-emblem.ea8ca36c38c3d8190124.png",
+    "static/media/SporeNextLauncher.png": "/static/media/SporeNextLauncher.60b9fc7ed375b3856ec8.png",
+    "index.html": "/index.html",
+    "main.ada0c300.css.map": "/static/css/main.ada0c300.css.map",
+    "main.367ea05c.js.map": "/static/js/main.367ea05c.js.map",
+    "453.7756090b.chunk.js.map": "/static/js/453.7756090b.chunk.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.ada0c300.css",
+    "static/js/main.367ea05c.js"
+  ]
+}

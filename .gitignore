@@ -1,0 +1,21 @@
+# node modules and build
+node_modules/
+dist/
+out/
+*.log
+
+# electron cache
+*.asar
+
+# system files
+.DS_Store
+Thumbs.db
+
+# mods folder
+Mods/
+
+# temp files
+*.tmp
+
+# modapi files
+modapi-launcher-kit-1.5.6/
