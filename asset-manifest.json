@@ -1,18 +1,18 @@
 {
   "files": {
-    "main.css": "/SporeNEXT/static/css/main.8a2952b5.css",
-    "main.js": "/SporeNEXT/static/js/main.a919bdb5.js",
+    "main.css": "/SporeNEXT/static/css/main.cf72d731.css",
+    "main.js": "/SporeNEXT/static/js/main.0736ab8f.js",
     "static/js/453.7756090b.chunk.js": "/SporeNEXT/static/js/453.7756090b.chunk.js",
     "static/media/spore-next-logo.png": "/SporeNEXT/static/media/spore-next-logo.5a83f9db06895ee7a552.png",
     "static/media/wallpaper.png": "/SporeNEXT/static/media/wallpaper.e93d92cdb6438443285d.png",
     "static/media/SporeNextLauncher.png": "/SporeNEXT/static/media/SporeNextLauncher.60b9fc7ed375b3856ec8.png",
     "index.html": "/SporeNEXT/index.html",
-    "main.8a2952b5.css.map": "/SporeNEXT/static/css/main.8a2952b5.css.map",
-    "main.a919bdb5.js.map": "/SporeNEXT/static/js/main.a919bdb5.js.map",
+    "main.cf72d731.css.map": "/SporeNEXT/static/css/main.cf72d731.css.map",
+    "main.0736ab8f.js.map": "/SporeNEXT/static/js/main.0736ab8f.js.map",
     "453.7756090b.chunk.js.map": "/SporeNEXT/static/js/453.7756090b.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.8a2952b5.css",
-    "static/js/main.a919bdb5.js"
+    "static/css/main.cf72d731.css",
+    "static/js/main.0736ab8f.js"
   ]
 }
