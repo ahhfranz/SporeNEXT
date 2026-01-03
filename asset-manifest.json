@@ -1,18 +1,18 @@
 {
   "files": {
-    "main.css": "/SporeNEXT/static/css/main.7abe45ed.css",
+    "main.css": "/SporeNEXT/static/css/main.c3943b9a.css",
     "main.js": "/SporeNEXT/static/js/main.2907a7ca.js",
     "static/js/453.7756090b.chunk.js": "/SporeNEXT/static/js/453.7756090b.chunk.js",
     "static/media/spore-next-logo.png": "/SporeNEXT/static/media/spore-next-logo.5a83f9db06895ee7a552.png",
     "static/media/wallpaper.png": "/SporeNEXT/static/media/wallpaper.e93d92cdb6438443285d.png",
     "static/media/SporeNextLauncher.png": "/SporeNEXT/static/media/SporeNextLauncher.1b471eef421b003c6ef5.png",
     "index.html": "/SporeNEXT/index.html",
-    "main.7abe45ed.css.map": "/SporeNEXT/static/css/main.7abe45ed.css.map",
+    "main.c3943b9a.css.map": "/SporeNEXT/static/css/main.c3943b9a.css.map",
     "main.2907a7ca.js.map": "/SporeNEXT/static/js/main.2907a7ca.js.map",
     "453.7756090b.chunk.js.map": "/SporeNEXT/static/js/453.7756090b.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.7abe45ed.css",
+    "static/css/main.c3943b9a.css",
     "static/js/main.2907a7ca.js"
   ]
 }
