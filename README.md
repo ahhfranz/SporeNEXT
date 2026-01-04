@@ -1,7 +1,51 @@
+<p align="center">
+
+  <!-- Game -->
+  <a href="https://img.shields.io/badge/status-active-success?style=for-the-badge">
+    <img src="https://img.shields.io/badge/game-Spore-blue?style=for-the-badge" alt="Game">
+  </a>
+
+  <!-- Platform -->
+  <a href="https://img.shields.io/badge/status-active-success?style=for-the-badge">
+   <img src="https://img.shields.io/badge/platform-Windows-7e5ab8?style=for-the-badge" alt="Platform">
+  </a>
+
+  <!-- Build (GitHub Actions) -->
+  <a href="https://img.shields.io/badge/status-active-success?style=for-the-badge">
+    <img src="https://img.shields.io/github/actions/workflow/status/bisfranz/SporeNEXT/main.yml?branch=main&style=for-the-badge" alt="GitHub Actions">
+  </a>
+
+  <!-- License -->
+  <a href="https://github.com/bisfranz/SporeNEXT/blob/main/LICENSE">
+    <img src="https://img.shields.io/github/license/bisfranz/SporeNEXT?style=for-the-badge" alt="License">
+  </a>
+
+  <!-- Stars -->
+  <a href="https://github.com/bisfranz/SporeNEXT/stargazers">
+     <img src="https://img.shields.io/github/stars/bisfranz/SporeNEXT?style=for-the-badge&color=ffef42&logo=github&logoColor=000000" alt="Stars">
+  </a>
+
+ <!-- Discord -->
+ <a href="https://github.com/bisfranz/SporeNEXT/stargazers">
+   <img src="https://img.shields.io/badge/chat-Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white">
+ </a>
+
+ <!-- Technologies -->
+<img src="https://img.shields.io/badge/framework-Electron.js-47848F?style=for-the-badge&logo=electron&logoColor=white">
+<img src="https://img.shields.io/badge/bundler-Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white">
+<img src="https://img.shields.io/badge/frontend-React-61DAFB?style=for-the-badge&logo=react&logoColor=black">
+<img src="https://img.shields.io/badge/runtime-Node.js-339933?style=for-the-badge&logo=node.js&logoColor=white">
+    
+</p>
+
+<p align="center">
+  <img src="public/assets/spore-next-logo.png" alt="Spore NEXT Logo" width="700px">
+</p>
+
 # Spore NEXT Launcher
 
 **Spore NEXT Launcher** is an open-source mod manager designed to make installing, updating, and removing mods for Spore: Galactic Adventures effortless.
-Originally created just to install an HD Textures mod pack, the launcher has evolved into a mod catalog where players can either install or uninstall a variety of mods with just a few clicks. (Work in progress)
+Originally created just to install an HD Textures mod pack, the launcher has evolved into a mod catalog where players can either install or uninstall a variety of mods with just a few clicks, powered by [Spore ModAPI Launcher Kit](https://github.com/Spore-Community/modapi-launcher-kit).
 
 This project is fully non-profit and built as part of my learning journey with JavaScript and Electron.js.
 It’s still an early release, so some bugs may appear — updates and fixes will be rolled out continuously based on community feedback.
@@ -13,12 +57,12 @@ It’s still an early release, so some bugs may appear — updates and fixes wil
 ## 📆 Features
 
 - ✅ **Expandable mod catalog** with ongoing additions.
+- ✅ **Author credits preserved** for all mods.
 - ✅ **One-click installation** of HD textures, enhanced lighting, and gameplay tweaks.
 - ✅ **Simple mod uninstallation** with just one click.
 - ✅ **Integrated SporeModAPI Easy Installer** for compatible mods.
 - ✅ **Multilanguage support:** Spanish and English.
 - ✅ **Modern, clean, and intuitive interface** designed for ease of use.
-- ✅ **Author credits preserved** for all mods.
 
 ---
 
@@ -27,7 +71,7 @@ It’s still an early release, so some bugs may appear — updates and fixes wil
 ### Requirements
 
 - Windows 10 or higher.
-- A legitimate copy of **Spore** or **Spore: Galactic Adventures** (Steam).
+- A legitimate copy of **Spore: Galactic Adventures** (Steam, EA, GOG).
 
 ---
 
@@ -57,5 +101,11 @@ Contributions are welcome! Feel free to fork the repository, submit issues, or s
 
 ---
 
-![Image1](https://i.imgur.com/umwXK1D.png)
-![Image1](https://i.imgur.com/0rYyEB7.png)
+<p align="center">
+  <img src="https://i.imgur.com/umwXK1D.png">
+</p>
+
+<p align="center">
+  <img src="https://i.imgur.com/0rYyEB7.png">
+</p>
+
