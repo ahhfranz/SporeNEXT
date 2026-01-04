@@ -26,7 +26,7 @@
   </a>
 
  <!-- Discord -->
- <a href="https://github.com/bisfranz/SporeNEXT/stargazers">
+ <a href="https://discord.com/invite/JqZyyugs5a">
    <img src="https://img.shields.io/badge/chat-Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white">
  </a>
 
