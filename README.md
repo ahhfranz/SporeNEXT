@@ -10,11 +10,6 @@
    <img src="https://img.shields.io/badge/platform-Windows-7e5ab8?style=for-the-badge" alt="Platform">
   </a>
 
-  <!-- Build (GitHub Actions) -->
-  <a href="https://img.shields.io/badge/status-active-success?style=for-the-badge">
-    <img src="https://img.shields.io/github/actions/workflow/status/bisfranz/SporeNEXT/main.yml?branch=main&style=for-the-badge" alt="GitHub Actions">
-  </a>
-
   <!-- License -->
   <a href="https://github.com/bisfranz/SporeNEXT/blob/main/LICENSE">
     <img src="https://img.shields.io/github/license/bisfranz/SporeNEXT?style=for-the-badge" alt="License">
@@ -26,7 +21,7 @@
   </a>
 
  <!-- Discord -->
- <a href="https://discord.com/invite/JqZyyugs5a">
+ <a href="https://github.com/bisfranz/SporeNEXT/stargazers">
    <img src="https://img.shields.io/badge/chat-Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white">
  </a>
 
