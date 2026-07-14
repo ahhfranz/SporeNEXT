@@ -1,0 +1,90 @@
+.restart-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+  z-index: 9999;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.restart-modal {
+  padding: 30px 40px;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  text-align: center;
+  background: var(--bg-color);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+  max-width: 420px;
+  width: 90%;
+}
+
+.restart-modal h3 {
+  margin: 0;
+  color: var(--text-main);
+  font-weight: 700;
+  font-size: 1.25rem;
+  letter-spacing: -0.5px;
+}
+
+.restart-modal-text {
+  color: var(--text-dim);
+  font-size: 0.9rem;
+  line-height: 1.5;
+  margin: 0 0 8px 0;
+}
+
+.restart-modal-buttons {
+  display: flex;
+  gap: 12px;
+  width: 100%;
+  justify-content: center;
+}
+
+.restart-modal-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 9px 18px;
+  border-radius: 9px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  min-width: 110px;
+  outline: none;
+}
+
+.restart-modal-btn.cancel {
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--text-dim, #9b99a4);
+}
+
+.restart-modal-btn.cancel:hover {
+  background: rgba(255, 255, 255, 0.07);
+  color: #ffffff;
+}
+
+.restart-modal-btn.confirm {
+  background: rgba(126, 90, 224, 0.15);
+  color: #a988f0;
+  border-color: rgba(126, 90, 224, 0.25);
+}
+
+.restart-modal-btn.confirm:hover {
+  background: rgba(126, 90, 224, 0.28);
+  color: #c4aaff;
+  border-color: rgba(126, 90, 224, 0.4);
+}

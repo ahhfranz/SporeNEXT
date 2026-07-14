@@ -1,0 +1,41 @@
+{
+  "appId": "com.sporenext.launcher",
+  "productName": "Spore NEXT",
+  "copyright": "Copyright © 2026 Spore NEXT",
+  "directories": {
+    "output": "dist_electron"
+  },
+  "afterPack": "./afterPack.cjs",
+  "files": [
+    "dist/**/*",
+    "main.cjs",
+    "main/**/*",
+    "preload.js",
+    "services/**/*",
+    "package.json"
+  ],
+  "win": {
+    "target": "nsis",
+    "icon": "build/icon.png",
+    "requestedExecutionLevel": "requireAdministrator"
+  },
+  "nsis": {
+    "oneClick": false,
+    "allowToChangeInstallationDirectory": true,
+    "deleteAppDataOnUninstall": true,
+    "installerSidebar": "build/installerSidebar.bmp",
+    "installerHeader": "build/installerHeader.bmp",
+    "runAfterFinish": true,
+    "createDesktopShortcut": "always",
+    "createStartMenuShortcut": true,
+    "shortcutName": "Spore NEXT",
+    "artifactName": "Spore-NEXT-Setup-${version}.${ext}"
+  },
+  "publish": [
+    {
+      "provider": "github",
+      "owner": "bisfranz",
+      "repo": "SporeNEXT"
+    }
+  ]
+}

@@ -1,0 +1,81 @@
+.main-content {
+  position: absolute;
+  top: 35px;
+  left: var(--sidebar-w);
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  padding: 0 8%;
+  z-index: 5;
+}
+
+.content-inner {
+  max-width: 750px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.icon-xs {
+  color: inherit;
+}
+
+
+.action-buttons {
+  display: flex;
+  gap: 20px;
+}
+
+.btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 28px;
+  border-radius: 30px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  transition: all 0.3s ease;
+}
+
+.btn-primary {
+  background: var(--primary);
+  color: #fff;
+}
+
+.btn-primary:hover {
+  background: var(--primary-hover);
+}
+
+.btn-secondary {
+  color: var(--text-main);
+}
+
+.btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.main-content.mods-tab-active {
+  position: absolute !important;
+  top: 110px !important;
+  bottom: 20px !important;
+  left: var(--sidebar-w) !important;
+  right: 0 !important;
+  height: auto !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  padding: 20px 40px 0px 0px !important;
+  overflow-y: hidden !important;
+}
+
+.main-content.home-tab-active {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  padding-top: 80px !important;
+  padding-left: 0px !important;
+  padding-right: 40px !important;
+  overflow-y: hidden !important;
+}

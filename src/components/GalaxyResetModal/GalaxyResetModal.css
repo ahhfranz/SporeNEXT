@@ -1,0 +1,316 @@
+.galaxy-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(4, 5, 8, 0.70);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  z-index: 9999;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.galaxy-modal {
+  width: 750px;
+  max-width: 92vw;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  border-radius: 16px;
+  background: linear-gradient(145deg, #13141f 0%, #0b0c14 100%);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  box-shadow:
+    0 28px 70px rgba(0, 0, 0, 0.9),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    0 0 60px rgba(90, 60, 180, 0.07);
+  animation: galaxyModalIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  overflow: hidden;
+}
+
+@keyframes galaxyModalIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+.galaxy-modal-header {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 24px 26px 20px;
+}
+
+.galaxy-modal-icon-wrap {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.galaxy-modal-icon {
+  width: 30px;
+  height: 30px;
+  object-fit: contain;
+}
+
+.galaxy-modal-header-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.galaxy-modal-title {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 800;
+  letter-spacing: 0.4px;
+  color: #ffffff;
+}
+
+.galaxy-modal-subtitle {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--text-dim, #6e6b7e);
+  line-height: 1.4;
+}
+
+.galaxy-modal-divider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.055);
+  flex-shrink: 0;
+}
+
+.galaxy-modal-body {
+  padding: 18px 22px;
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+}
+
+.galaxy-modal-body::-webkit-scrollbar {
+  width: 4px;
+}
+
+.galaxy-modal-body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.galaxy-modal-body::-webkit-scrollbar-thumb {
+  background: rgba(126, 90, 224, 0.25);
+  border-radius: 2px;
+}
+
+.galaxy-modal-loading,
+.galaxy-modal-empty {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--text-dim, #6e6b7e);
+  font-size: 0.9rem;
+  padding: 12px 4px;
+}
+
+.galaxy-modal-empty {
+  justify-content: center;
+  padding: 24px;
+  text-align: center;
+}
+
+.galaxy-folder-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.galaxy-folder-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 13px 16px;
+  border-radius: 10px;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: background 0.18s ease, border-color 0.18s ease, transform 0.15s ease;
+  user-select: none;
+}
+
+.galaxy-folder-item.current {
+  background: rgba(90, 180, 120, 0.06);
+  border-color: rgba(90, 180, 120, 0.12);
+}
+
+.galaxy-folder-item.backup {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.06);
+}
+
+.galaxy-folder-item.current:hover {
+  background: rgba(90, 180, 120, 0.12);
+  border-color: rgba(90, 180, 120, 0.24);
+}
+
+.galaxy-folder-item.backup:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.galaxy-folder-item.selected.current {
+  background: rgba(90, 180, 120, 0.14);
+  border-color: rgba(90, 180, 120, 0.4);
+  box-shadow: 0 0 0 2px rgba(90, 180, 120, 0.18);
+}
+
+.galaxy-folder-item.selected.backup {
+  background: rgba(126, 90, 224, 0.14);
+  border-color: rgba(126, 90, 224, 0.4);
+  box-shadow: 0 0 0 2px rgba(126, 90, 224, 0.18);
+}
+
+.galaxy-folder-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+  overflow: hidden;
+  flex: 1;
+}
+
+.galaxy-folder-name {
+  font-size: 0.93rem;
+  font-weight: 700;
+  color: #e8e6f0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.galaxy-folder-raw {
+  font-size: 0.75rem;
+  color: var(--text-dim, #6e6b7e);
+  font-family: 'Courier New', monospace;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.galaxy-folder-action-badge {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+
+.galaxy-folder-item.current .galaxy-folder-action-badge {
+  background: rgba(90, 180, 120, 0.12);
+  color: #6dba8a;
+  border: 1px solid rgba(90, 180, 120, 0.2);
+}
+
+.galaxy-folder-item.backup .galaxy-folder-action-badge {
+  background: rgba(126, 90, 224, 0.1);
+  color: #9b78e0;
+  border: 1px solid rgba(126, 90, 224, 0.18);
+}
+
+.galaxy-result {
+  margin-top: 14px;
+  padding: 11px 16px;
+  border-radius: 9px;
+  font-size: 0.87rem;
+  font-weight: 600;
+  line-height: 1.45;
+  animation: galaxyModalIn 0.25s ease;
+}
+
+.galaxy-result.success {
+  background: rgba(90, 180, 120, 0.1);
+  border: 1px solid rgba(90, 180, 120, 0.25);
+  color: #78c892;
+}
+
+.galaxy-result.error {
+  background: rgba(220, 60, 60, 0.1);
+  border: 1px solid rgba(220, 60, 60, 0.25);
+  color: #e07070;
+}
+
+.galaxy-modal-footer {
+  padding: 16px 22px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.galaxy-selected-hint {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--text-dim, #6e6b7e);
+  line-height: 1.45;
+  padding: 0 2px;
+}
+
+.galaxy-modal-buttons {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+.galaxy-modal-btn {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 10px 22px;
+  border-radius: 9px;
+  cursor: pointer;
+  font-size: 0.86rem;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  transition: all 0.2s ease;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  outline: none;
+}
+
+.galaxy-modal-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.galaxy-modal-btn.cancel {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-dim, #6e6b7e);
+}
+
+.galaxy-modal-btn.cancel:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.1);
+  color: #d0cfe0;
+}
+
+.galaxy-modal-btn.confirm {
+  background: rgba(126, 90, 224, 0.16);
+  color: #a988f0;
+  border-color: rgba(126, 90, 224, 0.28);
+}
+
+.galaxy-modal-btn.confirm:hover:not(:disabled) {
+  background: rgba(126, 90, 224, 0.28);
+  color: #c4aaff;
+  border-color: rgba(126, 90, 224, 0.45);
+  box-shadow: 0 0 16px rgba(126, 90, 224, 0.2);
+}

@@ -1,0 +1,170 @@
+.profile-container {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden !important;
+  box-sizing: border-box;
+  padding-right: 24px;
+}
+
+.profile-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.profile-container::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 3px;
+}
+
+.profile-container::-webkit-scrollbar-thumb {
+  background: rgba(126, 90, 224, 0.35);
+  border-radius: 3px;
+}
+
+.profile-container::-webkit-scrollbar-thumb:hover {
+  background: rgba(126, 90, 224, 0.6);
+}
+
+.profile-hero-card {
+  position: relative;
+  width: 100%;
+  border-radius: 20px;
+  overflow: hidden;
+  background: rgba(20, 17, 30, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.4);
+  margin-bottom: 24px;
+}
+
+.profile-banner-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  padding: 0 32px 15px 32px;
+  margin-top: -65px;
+  position: relative;
+  z-index: 5;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.profile-hero-left {
+  display: flex;
+  align-items: flex-end;
+  gap: 24px;
+  flex: 1;
+  min-width: 280px;
+}
+
+.profile-hero-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-bottom: 8px;
+}
+
+.profile-grid-container {
+  display: grid;
+  grid-template-columns: 1fr 450px;
+  gap: 24px;
+  width: 100%;
+  align-items: stretch;
+}
+
+.profile-main-column {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  min-width: 0;
+}
+
+.profile-sidebar-column {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  min-width: 0;
+}
+
+.profile-loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 400px;
+  border-radius: 16px;
+}
+
+.profile-loading-logo {
+  width: 120px;
+  height: 120px;
+  object-fit: contain;
+  animation: profile-spin 1.2s linear infinite;
+}
+
+@keyframes profile-spin {
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.main-content.profile-tab-active {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+  padding-top: 45px !important;
+  padding-left: 0px !important;
+  padding-right: 90px !important;
+  overflow: hidden !important;
+  overflow-x: hidden !important;
+}
+
+/* Responsive Breakpoints */
+@media (max-width: 1280px) {
+  .profile-grid-container {
+    grid-template-columns: 1fr 400px;
+    gap: 20px;
+  }
+}
+
+@media (max-width: 1024px) {
+  .profile-grid-container {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+}
+
+@media (max-width: 768px) {
+  .profile-banner-content {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    margin-top: -55px;
+    padding: 0 20px 20px 20px;
+  }
+
+  .profile-hero-left {
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .profile-hero-right {
+    padding-bottom: 0;
+    justify-content: center;
+    width: 100%;
+  }
+
+  .main-content.profile-tab-active {
+    padding-right: 20px !important;
+  }
+}

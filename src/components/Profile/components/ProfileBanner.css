@@ -1,0 +1,119 @@
+.profile-header {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  margin-bottom: 20px;
+}
+
+.profile-banner {
+  height: 200px;
+  width: 100%;
+  border-radius: 16px;
+  background-color: rgba(255, 255, 255, 0.02);
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  background-size: cover;
+  background-position: center;
+  z-index: 1;
+}
+
+.banner-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 50%;
+  background: linear-gradient(to top, rgba(15, 15, 18, 0.9) 0%, transparent 100%);
+}
+
+.profile-banner-actions {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  display: flex;
+  gap: 8px;
+  z-index: 10;
+}
+
+.profile-banner-edit-btn,
+.profile-banner-delete-btn {
+  background: rgba(15, 15, 18, 0.75);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.profile-banner-edit-btn {
+  padding: 8px 14px;
+  gap: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.profile-banner-delete-btn {
+  width: 35px;
+  height: 35px;
+}
+
+.profile-banner-edit-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.profile-banner-delete-btn:hover {
+  background: rgba(255, 71, 87, 0.2);
+  border-color: rgba(255, 71, 87, 0.4);
+  color: #ff4757;
+}
+
+.profile-banner-edit-btn:active,
+.profile-banner-delete-btn:active {
+  transform: translateY(0);
+}
+
+.banner-drag-instruction {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(4px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.9);
+  pointer-events: none;
+  z-index: 5;
+  transition: opacity 0.2s ease;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+}
+
+.profile-banner:active .banner-drag-instruction {
+  opacity: 0;
+}
+
+.profile-banner.draggable {
+  user-select: none;
+}
+
+.file-upload-hidden {
+  display: none;
+}
+
+.profile-banner.cursor-grab {
+  cursor: grab;
+}
+
+.profile-banner.cursor-grabbing {
+  cursor: grabbing;
+}

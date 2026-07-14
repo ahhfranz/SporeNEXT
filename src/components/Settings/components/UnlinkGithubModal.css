@@ -1,0 +1,129 @@
+.unlink-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(4, 5, 8, 0.65);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 9999;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.unlink-modal {
+  width: 480px;
+  max-width: 90%;
+  padding: 28px 30px;
+  border-radius: 14px;
+  background: linear-gradient(145deg, #161820 0%, #0c0d12 100%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow:
+    0 24px 60px rgba(0, 0, 0, 0.85),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  position: relative;
+  overflow: hidden;
+}
+
+.unlink-modal::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle at center, rgba(126, 90, 224, 0.04) 0%, transparent 60%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.unlink-modal-content-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 26px;
+  width: 100%;
+  text-align: left;
+  z-index: 1;
+  position: relative;
+}
+
+.unlink-modal-logo-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 4px;
+}
+
+.unlink-modal-logo {
+  width: 76px;
+  height: 76px;
+  object-fit: contain;
+  transform: rotate(-12deg);
+}
+
+.unlink-modal-details {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+}
+
+.unlink-modal-title {
+  margin: 0;
+  font-size: 1.35rem;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  color: #ffffff;
+}
+
+.unlink-modal-text {
+  margin: 0;
+  color: var(--text-dim);
+  font-size: 0.95rem;
+  line-height: 1.45;
+  font-weight: 500;
+}
+
+.unlink-modal-buttons {
+  display: flex;
+  gap: 12px;
+  margin-top: 10px;
+  justify-content: flex-start;
+  z-index: 1;
+}
+
+.unlink-modal-btn {
+  padding: 10px 22px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.88rem;
+  font-weight: 700;
+  transition: all 0.2s ease;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  min-width: 110px;
+  outline: none;
+}
+
+.unlink-modal-btn.cancel {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-dim);
+}
+
+.unlink-modal-btn.cancel:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--text-main);
+}
+
+.unlink-modal-btn.confirm {
+  background: rgba(255, 60, 60, 0.14);
+  color: #ff5555;
+  border-color: rgba(255, 60, 60, 0.25);
+}
+
+.unlink-modal-btn.confirm:hover {
+  background: rgba(255, 60, 60, 0.26);
+  color: #ffaaaa;
+}

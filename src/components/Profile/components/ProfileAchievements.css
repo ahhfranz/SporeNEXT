@@ -1,0 +1,205 @@
+.profile-achievements-card {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  height: 100%;
+}
+
+.card-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.card-title {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #fff;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.card-title svg {
+  color: var(--primary);
+}
+
+.achievements-progress-hero {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.progress-star-wrapper {
+  width: 55px;
+  height: 55px;
+  border-radius: 50%;
+  background: rgba(126, 90, 224, 0.15);
+  border: 1px solid rgba(126, 90, 224, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 16px rgba(126, 90, 224, 0.2);
+  flex-shrink: 0;
+  padding: 6px;
+}
+
+.progress-badge-icon {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.4));
+}
+
+.progress-details {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+}
+
+.progress-labels {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.progress-stats {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.progress-percent {
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.progress-bar-track {
+  height: 6px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 3px;
+  overflow: hidden;
+  width: 100%;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(to right, #7e5ae0, #a988f0);
+  border-radius: 3px;
+  box-shadow: 0 0 10px rgba(126, 90, 224, 0.5);
+  transition: width 0.3s ease;
+}
+
+.achievements-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 12px;
+  padding: 4px 0;
+}
+
+.achievement-item {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.achievement-icon-wrapper {
+  width: 45px;
+  height: 45px;
+  border-radius: 12px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+}
+
+.achievement-icon-wrapper.unlocked {
+  border-color: rgba(126, 90, 224, 0.3);
+  box-shadow: 1px 1px 1px rgba(126, 90, 224, 0.15);
+}
+
+.achievement-icon-wrapper.locked {
+  filter: grayscale(100%);
+  opacity: 0.35;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.achievement-icon-wrapper:hover {
+  border-color: #a988f0;
+  box-shadow: 0 8px 24px rgba(126, 90, 224, 0.45), 0 0 0 3px rgba(126, 90, 224, 0.2);
+  filter: none;
+  opacity: 1;
+}
+
+.achievement-icon {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.secret-badge-wrapper {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(126, 90, 224, 0.2);
+}
+
+.secret-badge-count {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #a988f0;
+}
+
+.achievement-tooltip {
+  visibility: hidden;
+  opacity: 0;
+  width: 300px;
+  background: #13111e;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #fff;
+  border-radius: 12px;
+  padding: 14px;
+  position: absolute;
+  z-index: 1000;
+  bottom: 125%;
+  left: 50%;
+  transform: translateX(-50%) translateY(5px);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.7);
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.achievement-tooltip::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 6px;
+  border-style: solid;
+  border-color: rgba(18, 16, 25, 0.95) transparent transparent transparent;
+}
+
+.achievement-tooltip.is-active {
+  visibility: visible;
+  opacity: 1;
+  bottom: auto;
+  left: auto;
+  transform: none;
+}
+
+@media (max-width: 600px) {
+  .achievements-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}

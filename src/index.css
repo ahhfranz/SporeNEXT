@@ -1,0 +1,205 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+
+:root {
+  --bg-color: #121019;
+  --bg-accent: rgba(255, 255, 255, 0.05);
+  --primary: #7e5ae0;
+  --primary-hover: #9c7cf0;
+  --text-main: #ffffff;
+  --text-dim: #9b99a4;
+  --glass-bg: rgba(25, 22, 34, 0.6);
+  --glass-border: rgba(255, 255, 255, 0.05);
+
+  --sidebar-w: 80px;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Inter', sans-serif;
+}
+
+a,
+img,
+svg {
+  -webkit-user-drag: none;
+}
+
+body {
+  width: 100vw;
+  height: 100vh;
+  background-color: var(--bg-color);
+  color: var(--text-main);
+  overflow: hidden;
+  user-select: none;
+  background: radial-gradient(circle at 70% 30%, rgba(68, 41, 102, 0.2) 0%, var(--bg-color) 60%),
+    radial-gradient(circle at 10% 80%, rgba(47, 54, 118, 0.2) 0%, var(--bg-color) 50%);
+  background-size: cover;
+  background-position: center;
+}
+
+button {
+  border: none;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.glass {
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade {
+  animation: fadeIn 0.6s ease-out forwards;
+}
+
+@keyframes fadeJustIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-tab {
+  animation: fadeJustIn 0.5s ease-out forwards;
+}
+
+.main-content::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.main-content::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 4px;
+}
+
+.main-content::-webkit-scrollbar-thumb {
+  background: rgba(126, 90, 224, 0.35);
+  border-radius: 4px;
+  border: 1px solid transparent;
+  background-clip: padding-box;
+}
+
+.main-content::-webkit-scrollbar-thumb:hover {
+  background: rgba(126, 90, 224, 0.6);
+  border: 1px solid transparent;
+  background-clip: padding-box;
+}
+
+.main-content {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(126, 90, 224, 0.35) rgba(0, 0, 0, 0.15);
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.spin-icon,
+.spinner-icon {
+  animation: spin 1.5s linear infinite !important;
+  display: inline-block;
+  pointer-events: none;
+}
+
+/* custom tooltips */
+
+[data-tooltip] {
+  position: relative;
+}
+
+[data-tooltip]:hover {
+  z-index: 999;
+}
+
+[data-tooltip]::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%) translateY(4px) scale(0.95);
+  padding: 6px 12px;
+  background: rgba(18, 14, 28, 0.95);
+  border: 1px solid rgba(169, 136, 240, 0.25);
+  color: #ffffff;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: 8px;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s;
+  transition-delay: 0s;
+  z-index: 99999999999999 !important;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+[data-tooltip]:hover::after {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(0) scale(1);
+  transition-delay: 0.6s;
+}
+
+[data-tooltip-pos="bottom"]::after {
+  top: calc(100% + 8px);
+  bottom: auto;
+  transform: translateX(-50%) translateY(-4px) scale(0.95);
+}
+
+[data-tooltip-pos="bottom"]:hover::after {
+  transform: translateX(-50%) translateY(0) scale(1);
+}
+
+[data-tooltip-pos="left"]::after {
+  right: calc(100% + 8px);
+  left: auto;
+  top: 50%;
+  bottom: auto;
+  transform: translateY(-50%) translateX(4px) scale(0.95);
+}
+
+[data-tooltip-pos="left"]:hover::after {
+  transform: translateY(-50%) translateX(0) scale(1);
+}
+
+[data-tooltip-pos="right"]::after {
+  left: calc(100% + 8px);
+  top: 50%;
+  bottom: auto;
+  transform: translateY(-50%) translateX(-4px) scale(0.95);
+}
+
+[data-tooltip-pos="right"]:hover::after {
+  transform: translateY(-50%) translateX(0) scale(1);
+}

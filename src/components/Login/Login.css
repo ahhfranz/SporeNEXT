@@ -1,0 +1,404 @@
+.login-container {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  background-color: var(--bg-color);
+  background: radial-gradient(circle at 50% 50%, rgba(68, 41, 102, 0.2) 0%, var(--bg-color) 70%);
+}
+
+.login-drag-area {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 40px;
+  -webkit-app-region: drag;
+  z-index: 1;
+}
+
+.login-window-controls {
+  position: fixed;
+  top: 0;
+  right: 0;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 30px;
+  -webkit-app-region: no-drag;
+  z-index: 999999;
+}
+
+.login-window-controls .control-btn {
+  width: 50px;
+  height: 50px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: var(--text-dim);
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.login-window-controls .control-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-main);
+}
+
+.login-window-controls .control-btn.close:hover {
+  background: rgba(255, 60, 60, 0.8);
+  color: white;
+}
+
+.login-box {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 100%;
+  max-width: 600px;
+  padding: 40px;
+  z-index: 10;
+  -webkit-app-region: no-drag;
+}
+
+.login-head {
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--text-main);
+  margin-bottom: 15px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.login-head-logo {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+  filter: drop-shadow(0 0 8px rgba(126, 90, 224, 0.4));
+}
+
+.brand-text {
+  color: var(--primary);
+  text-shadow: 0 0 10px rgba(126, 90, 224, 0.3);
+}
+
+.login-subtext {
+  font-size: 15px;
+  color: var(--text-dim);
+  margin-bottom: 35px;
+}
+
+.login-subtext strong {
+  color: var(--text-main);
+  font-weight: 700;
+}
+
+.login-form {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.input-group {
+  position: relative;
+  width: 100%;
+}
+
+.input-group input {
+  width: 100%;
+  padding: 16px 20px;
+  background-color: rgba(255, 255, 255, 0.05);
+  color: var(--text-main);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  font-size: 15px;
+  outline: none;
+  transition: all 0.3s ease;
+}
+
+.input-group input:focus {
+  border-color: var(--primary);
+  background-color: rgba(255, 255, 255, 0.08);
+}
+
+.input-group input::placeholder {
+  color: var(--text-dim);
+}
+
+.eye-btn {
+  position: absolute;
+  right: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #888;
+  padding: 5px;
+}
+
+.eye-btn:hover {
+  color: #333;
+}
+
+.forgot-password {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #bbb;
+  font-size: 14px;
+}
+
+.forgot-password a {
+  color: #4da6ff;
+  text-decoration: none;
+}
+
+.forgot-password a:hover {
+  text-decoration: underline;
+}
+
+.submit-btn {
+  width: 100%;
+  background-color: var(--primary);
+  color: #fff;
+  padding: 16px;
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  border-radius: 8px;
+  margin-top: 10px;
+  box-shadow: 0 8px 25px rgba(126, 90, 224, 0.3);
+  transition: all 0.3s ease;
+}
+
+.submit-btn:hover {
+  background-color: var(--primary-hover);
+  box-shadow: 0 12px 30px rgba(126, 90, 224, 0.5);
+}
+
+.cancel-btn {
+  width: 100%;
+  background: transparent;
+  color: #a1a1aa;
+  padding: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.cancel-btn:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.toggle-mode {
+  margin-top: 15px;
+  font-size: 14px;
+  color: #bbb;
+}
+
+.link-btn {
+  color: #4da6ff;
+  font-weight: 600;
+}
+
+.link-btn:hover {
+  text-decoration: underline;
+}
+
+.error-banner {
+  width: 100%;
+  background: rgba(255, 60, 60, 0.1);
+  border: 1px solid #ff3c3c;
+  color: #ff5555;
+  padding: 12px;
+  border-radius: 4px;
+  margin-bottom: 20px;
+  font-size: 14px;
+  text-align: center;
+}
+
+.divider {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 30px 0 20px;
+  color: #666;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.divider::before,
+.divider::after {
+  content: '';
+  flex: 1;
+  border-bottom: 1px solid #333;
+  margin: 0 15px;
+}
+
+.oauth-buttons-row {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  width: 100%;
+  margin-bottom: 5px;
+}
+
+.discord-alt-btn {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: #5865F2;
+  color: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: all 0.3s ease;
+}
+
+.discord-alt-btn:hover {
+  background: #4752C4;
+  transform: scale(1.1);
+  box-shadow: 0 5px 15px rgba(88, 101, 242, 0.4);
+}
+
+.github-alt-btn {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: #24292e;
+  color: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: all 0.3s ease;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.github-alt-btn:hover {
+  background: #2f363d;
+  transform: scale(1.1);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+}
+
+.offline-mode-btn {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  color: var(--text-dim);
+  padding: 12px 20px;
+  width: 100%;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-top: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.offline-mode-btn:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-main);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+@media (max-width: 1200px),
+(max-height: 800px) {
+  .login-box {
+    max-width: 480px;
+    padding: 24px;
+  }
+
+  .login-head {
+    font-size: 24px;
+    margin-bottom: 10px;
+    gap: 10px;
+  }
+
+  .login-head-logo {
+    width: 32px;
+    height: 32px;
+  }
+
+  .login-subtext {
+    font-size: 13px;
+    margin-bottom: 20px;
+  }
+
+  .login-form {
+    gap: 12px;
+  }
+
+  .input-group input {
+    padding: 12px 16px;
+    font-size: 13px;
+  }
+
+  .forgot-password {
+    font-size: 12px;
+  }
+
+  .submit-btn {
+    padding: 12px;
+    font-size: 13px;
+    margin-top: 6px;
+  }
+
+  .cancel-btn {
+    padding: 10px;
+    font-size: 13px;
+  }
+
+  .toggle-mode {
+    margin-top: 10px;
+    font-size: 12px;
+  }
+
+  .divider {
+    margin: 15px 0 10px;
+    font-size: 11px;
+  }
+
+  .discord-alt-btn,
+  .github-alt-btn {
+    width: 42px;
+    height: 42px;
+  }
+
+  .offline-mode-btn {
+    padding: 10px 16px;
+    font-size: 13px;
+    margin-top: 10px;
+  }
+
+  .error-banner {
+    padding: 8px;
+    margin-bottom: 12px;
+    font-size: 12px;
+  }
+}
+
+.submit-btn:disabled,
+.discord-alt-btn:disabled,
+.github-alt-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none !important;
+  box-shadow: none !important;
+  background-color: rgba(255, 255, 255, 0.08) !important;
+  color: rgba(255, 255, 255, 0.3) !important;
+  border: 1px solid rgba(255, 255, 255, 0.05) !important;
+}

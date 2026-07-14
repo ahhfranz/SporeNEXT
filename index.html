@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Content-Security-Policy"
+    content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https://flagcdn.com https://cdn.discordapp.com https://xwbvtavvrqfxfnnmbdht.supabase.co https://avatars.githubusercontent.com https://github.com; connect-src 'self' https://xwbvtavvrqfxfnnmbdht.supabase.co wss://xwbvtavvrqfxfnnmbdht.supabase.co https://api.github.com https://github.com https://discord.com https://discordapp.com ws://localhost:5173 http://localhost:5173 http://localhost:4242; media-src 'self' blob:" />
+  <title>Spore NEXT</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100vw;
+      height: 100vh;
+      background-color: #121019;
+      color: #ffffff;
+      overflow: hidden;
+    }
+    #root-preloader {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      width: 100vw;
+      height: 100vh;
+      background-color: #121019;
+    }
+    .pre-spin-logo {
+      width: 120px;
+      height: 120px;
+      object-fit: contain;
+      animation: preSpin 1.5s linear infinite;
+    }
+    @keyframes preSpin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+
+<body>
+  <div id="root">
+    <div id="root-preloader">
+      <img src="/src/assets/logo.png" alt="Loading..." class="pre-spin-logo" />
+    </div>
+  </div>
+  <script type="module" src="/src/main.jsx"></script>
+</body>
+
+</html>

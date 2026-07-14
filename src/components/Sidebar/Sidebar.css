@@ -1,0 +1,143 @@
+.sidebar {
+  width: var(--sidebar-w);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 30px 0;
+  background: var(--bg-color);
+  border-right: 1px solid rgba(255, 255, 255, 0.02);
+  z-index: 30;
+}
+
+.sidebar-logo {
+  margin-bottom: 60px;
+}
+
+.logo-wrapper {
+  position: relative;
+  display: inline-block;
+  cursor: pointer;
+}
+
+.logo-img {
+  width: 44px;
+  height: 44px;
+  object-fit: contain;
+  transition: transform 0.3s ease;
+}
+
+.logo-wrapper:hover .logo-img {
+  transform: scale(1.05);
+}
+
+.logo-badge {
+  position: absolute;
+  bottom: -4px;
+  right: -4px;
+  background: var(--primary);
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: 10px;
+  border: 2px solid var(--bg-color, #0f0f12);
+  min-width: 10px;
+  text-align: center;
+  line-height: 1;
+  box-shadow: 0 4px 15px rgba(126, 90, 224, 0.4);
+  animation: badgePop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  pointer-events: none;
+}
+
+@keyframes badgePop {
+  0% {
+    transform: scale(0);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
+.sidebar-group {
+  margin-bottom: 20px;
+}
+
+.sidebar-main-nav {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+  padding: 15px 10px;
+  border-radius: 30px;
+  background: var(--glass-bg);
+}
+
+.sidebar-item {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  color: var(--text-dim);
+  transition: background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+  background: transparent;
+}
+
+.sidebar-item.disabled {
+  opacity: 0.3;
+  cursor: not-allowed !important;
+}
+
+.sidebar-item.disabled:hover {
+  background: transparent;
+  color: var(--text-dim);
+}
+
+.sidebar-item:hover {
+  color: var(--text-main);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.sidebar-item.active {
+  background: var(--primary);
+  color: #fff;
+  box-shadow: 0 4px 15px rgba(126, 90, 224, 0.4);
+}
+
+.sidebar-bottom {
+  margin-top: auto;
+}
+
+.logout:hover {
+  background: rgba(255, 60, 60, 0.1);
+  color: #ff5555;
+}
+
+.coffee:hover {
+  background: rgba(255, 196, 57, 0.12);
+  color: #ffc439;
+}
+
+.discord:hover {
+  background: rgba(88, 101, 242, 0.12);
+  color: #5865F2;
+}
+
+.sidebar-item img.icon {
+  filter: brightness(0) invert(0.65);
+  transition: filter 0.3s ease;
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+}
+
+.sidebar-item:hover img.icon {
+  filter: brightness(0) invert(0.88);
+}
+
+.sidebar-item.active img.icon {
+  filter: brightness(0) invert(1);
+}
